@@ -50,7 +50,7 @@ const AppContent = () => {
       )}
       {!isAdminRoute && <Navbar />}
 
-      <main className="flex-grow">
+      <main className="grow">
         <Routes>
           {/* PUBLIC */}
           <Route path="/" element={<Home />} />

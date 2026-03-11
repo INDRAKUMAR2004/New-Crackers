@@ -25,10 +25,12 @@ import {
   CheckCircle2,
   Truck,
   Banknote,
+  FileText,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
+import InvoiceTemplate from './InvoiceTemplate';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -37,6 +39,7 @@ const OrderManagement = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
   const [statusUpdating, setStatusUpdating] = useState(null);
 
   const loadOrders = async () => {
@@ -401,6 +404,13 @@ const OrderManagement = () => {
                             <Eye size={15} />
                           </button>
                           <button
+                            onClick={() => setInvoiceOrder(o)}
+                            className="p-1.5 rounded hover:bg-[#eae6ff] text-[#6b778c] hover:text-[#403294] transition-colors"
+                            title="Invoice"
+                          >
+                            <FileText size={15} />
+                          </button>
+                          <button
                             onClick={() => handleDelete(o.id)}
                             className="p-1.5 rounded hover:bg-[#ffebe6] text-[#6b778c] hover:text-[#de350b] transition-colors"
                             title="Delete"
@@ -540,10 +550,13 @@ const OrderManagement = () => {
             {/* Modal Footer */}
             <div className="px-6 py-3 bg-[#fafbfc] border-t border-[#dfe1e6] flex gap-2 shrink-0">
               <button
-                onClick={() => handleDownloadPDF(selectedOrder)}
+                onClick={() => {
+                  setInvoiceOrder(selectedOrder);
+                  setSelectedOrder(null);
+                }}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white border border-[#dfe1e6] rounded text-[13px] font-medium text-[#42526e] hover:bg-[#f4f5f7] transition-colors"
               >
-                <Download size={14} /> Download Invoice
+                <FileText size={14} /> View Invoice
               </button>
               <button
                 onClick={() => {
@@ -557,6 +570,14 @@ const OrderManagement = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {invoiceOrder && (
+        <InvoiceTemplate
+          order={invoiceOrder}
+          rank={rankMap[invoiceOrder.id]}
+          onClose={() => setInvoiceOrder(null)}
+        />
       )}
     </div>
   );
