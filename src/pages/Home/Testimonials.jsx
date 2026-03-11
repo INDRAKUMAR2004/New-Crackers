@@ -1,8 +1,7 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
-import { Star, Quote, CheckCircle2, User } from 'lucide-react';
-
+import { Star, Quote, CheckCircle2 } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
@@ -42,74 +41,62 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="py-24 bg-slate-900 font-body relative overflow-hidden">
-      {/* Bg Effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-
-      <div className="container-custom mx-auto px-6 relative z-10">
-        <div className="text-center mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-orange-400 text-xs font-bold tracking-[0.2em] uppercase mb-5">
-            Customer Reviews
-          </span>
-          <h2 className="text-4xl md:text-5xl font-black mb-5 text-white tracking-tight">
-            What Our{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400">
-              Customers Say
-            </span>
+    <section className="py-16 bg-white">
+      <div className="container-custom mx-auto px-4 md:px-6">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            What Our Customers Say
           </h2>
-          <p className="text-slate-400 max-w-xl mx-auto text-base md:text-lg">
-            Trusted by thousands of families for quality, safety, and reliable
-            service.
+          <p className="text-gray-500 text-sm max-w-lg mx-auto">
+            Trusted by thousands of families across India for quality and
+            reliable service.
           </p>
         </div>
 
         <Swiper
           modules={[Autoplay, Pagination]}
           autoplay={{ delay: 3500, disableOnInteraction: false }}
-          spaceBetween={30}
+          spaceBetween={20}
           slidesPerView={1}
           breakpoints={{
             640: { slidesPerView: 2 },
             1024: { slidesPerView: 3 },
           }}
           pagination={{ clickable: true, dynamicBullets: true }}
-          className="pb-16"
+          className="pb-12 category-swiper"
         >
           {testimonials.map((t, index) => (
             <SwiperSlide key={index} className="h-auto">
-              <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-8 h-full relative group hover:border-orange-500/20 hover:bg-white/[0.05] transition-all duration-500">
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-6 h-full relative group hover:border-gray-200 hover:shadow-sm transition-all duration-300">
                 <Quote
-                  size={36}
-                  className="text-white/5 absolute top-6 right-6 group-hover:text-orange-500/15 transition-all duration-500"
+                  size={28}
+                  className="text-gray-200 absolute top-4 right-4"
                 />
-
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      size={16}
-                      className="text-yellow-500 fill-current"
+                      size={14}
+                      className="fill-amber-400 text-amber-400"
                     />
                   ))}
                 </div>
-
-                <p className="text-white/60 text-base mb-8 leading-relaxed z-10 relative">
-                  &ldquo;{t.message}&rdquo;
+                <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                  "{t.message}"
                 </p>
-
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-orange-500/20">
+                <div className="flex items-center gap-3 mt-auto">
+                  <div className="w-9 h-9 rounded-full bg-brand-light text-accent flex items-center justify-center text-sm font-bold">
                     {t.name.charAt(0)}
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-sm">{t.name}</h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500">
+                    <h4 className="text-sm font-semibold text-gray-900">
+                      {t.name}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-400">
                         {t.location}
                       </span>
-                      <span className="w-1 h-1 rounded-full bg-slate-600"></span>
-                      <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                      <span className="text-[10px] text-green-600 flex items-center gap-0.5 font-medium">
                         <CheckCircle2 size={10} /> Verified
                       </span>
                     </div>

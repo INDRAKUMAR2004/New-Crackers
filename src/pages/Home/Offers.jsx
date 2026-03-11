@@ -62,34 +62,37 @@ const Offers = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white to-slate-50/50 relative overflow-hidden font-body">
-      <div className="container-custom mx-auto px-6 relative z-10">
+    <section className="py-24 bg-primary relative overflow-hidden font-sans">
+      {/* Premium Background Assets */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gold-dark/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_100%)] pointer-events-none" />
+
+      <div className="container-custom mx-auto px-6 md:px-8 relative z-10">
         {/* Header & Timer */}
-        <div className="flex flex-col lg:flex-row items-center justify-between mb-14 gap-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between mb-16 gap-10 border-b border-gold/10 pb-10">
           <div className="text-center lg:text-left">
-            <span className="inline-block px-3.5 py-1 mb-4 border border-orange-100 rounded-full text-orange-500 text-xs font-semibold tracking-wider uppercase bg-orange-50">
+            <span className="inline-block px-4 py-1.5 mb-5 border border-gold/30 rounded-full text-gold-light text-xs font-bold tracking-[0.25em] uppercase bg-gold-dark/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
               Limited Time Only
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">
-              Festival{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
-                Offers
-              </span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 heading-serif tracking-tight">
+              Festival <span className="text-gold-gradient">Offers</span>
             </h2>
-            <p className="text-slate-400">
-              Grab the best deals before they expire!
+            <p className="text-gray-400 text-lg font-medium heading-sans max-w-lg">
+              Grab exclusive deals on our premium collections before they
+              expire.
             </p>
           </div>
 
-          <div className="flex gap-3 sm:gap-4">
+          <div className="flex gap-3 sm:gap-5">
             {Object.entries(timeLeft).map(([unit, value]) => (
               <div key={unit} className="flex flex-col items-center">
-                <div className="w-16 h-16 sm:w-18 sm:h-18 bg-white border border-slate-100 rounded-2xl flex items-center justify-center mb-2 shadow-sm">
-                  <span className="text-2xl sm:text-3xl font-bold text-slate-900">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center mb-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                  <span className="text-3xl sm:text-4xl font-bold text-white heading-sans tracking-widest text-shadow-sm">
                     {String(value).padStart(2, '0')}
                   </span>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                <span className="text-[11px] uppercase tracking-[0.2em] text-gold font-bold">
                   {unit}
                 </span>
               </div>
@@ -98,40 +101,45 @@ const Offers = () => {
         </div>
 
         {/* Offers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {offers.map((offer) => (
             <div
               key={offer.id}
-              className="group relative bg-white border border-slate-100 rounded-2xl p-7 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:border-slate-200 overflow-hidden"
+              className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(212,175,55,0.15)] hover:border-gold/30 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                <div className="text-orange-500">
+              {/* Card bg gradient */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${offer.bg} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
+              />
+
+              <div className="w-14 h-14 rounded-2xl bg-gold-dark/20 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-gold-dark transition-all duration-500 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                <div className="text-gold-light group-hover:text-white transition-colors duration-300">
                   {React.cloneElement(offer.icon, {
-                    className: 'text-orange-500',
-                    size: 20,
+                    size: 24,
+                    strokeWidth: 1.5,
                   })}
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-slate-900 mb-1.5">
+              <h3 className="text-2xl font-bold text-white mb-2 heading-sans">
                 {offer.title}
               </h3>
-              <p className="text-slate-400 text-sm mb-5">{offer.desc}</p>
+              <p className="text-gray-400 text-base mb-8">{offer.desc}</p>
 
-              <div className="bg-slate-50 rounded-xl p-3.5 border border-dashed border-slate-200 flex items-center justify-between mb-5 group-hover:border-orange-200 transition-colors duration-300">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
+              <div className="bg-black/40 rounded-2xl p-4 border border-dashed border-gold/30 flex items-center justify-between mb-8 group-hover:border-gold transition-colors duration-500">
+                <span className="text-xs text-gray-400 uppercase tracking-widest font-bold">
                   Use Code
                 </span>
-                <span className="text-sm font-mono font-bold text-orange-500 tracking-widest">
+                <span className="text-base font-mono font-bold text-gold-light tracking-[0.2em]">
                   {offer.code}
                 </span>
               </div>
 
               <button
                 onClick={() => navigate('/products')}
-                className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-xl hover:bg-gradient-to-r hover:from-red-600 hover:to-orange-500 transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-orange-500/20"
+                className="w-full py-3.5 bg-white text-primary font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-gradient-to-r hover:from-gold-dark hover:to-gold hover:text-primary transition-all duration-500 flex items-center justify-center gap-3 hover:shadow-[0_10px_20px_rgba(212,175,55,0.4)] relative z-10"
               >
-                Shop Now <ArrowRight size={16} />
+                Shop Offer <ArrowRight size={18} strokeWidth={2} />
               </button>
             </div>
           ))}

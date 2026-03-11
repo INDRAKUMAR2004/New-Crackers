@@ -1,74 +1,47 @@
-import React, { useEffect, useState } from 'react';
-
-import card from '../../assets/image1.jpg'
+import React from 'react';
+import card from '../../assets/image1.jpg';
 
 const AboutBanner = () => {
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className="relative w-full px-4 py-16 font-family 
-       overflow-hidden">
-
-      {/* ⭐ Background Image as <img /> */}
+    <div className="relative w-full px-6 py-20 md:py-28 overflow-hidden bg-gray-50 border-b border-gray-100">
+      {/* Background Image */}
       <img
-        src={card} // ← Change to your image path
+        src={card}
         alt="Our Story Background"
-        className="absolute inset-0 w-full h-full object-cover opacity-100"
-        style={{ transform: `translateY(${scrollY * 0.3}px)` }} // Optional parallax
+        className="absolute inset-0 w-full h-full object-cover opacity-10"
       />
+      <div className="absolute inset-0 bg-white/70" />
 
-      {/* Light overlay for better text contrast if needed */}
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]"></div>
+      <div className="relative max-w-5xl mx-auto text-center z-10">
+        <span className="inline-block px-4 py-1.5 rounded-full text-[10px] font-semibold border border-gray-200 bg-white uppercase tracking-widest text-gray-500 mb-5">
+          Trusted Since 2018
+        </span>
 
-      {/* ⭐ Content */}
-      <div className="relative max-w-5xl mx-auto text-center text-blue-950 z-10">
-
-        {/* Badge */}
-        <h2 className="inline-block px-7 py-2 rounded-full text-sm font-bold 
-          shadow-md border border-red-200 bg-red-50 
-          uppercase tracking-[0.25em] text-red-600">
-           TRUSTED SINCE 2018
-        </h2>
-
-        {/* Heading */}
-        <h1 className="text-2xl md:text-4xl font-extrabold mt-3 py-5 
-          text-white drop-shadow-sm">
-          Our Story
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-gray-900">
+          Our <span className="text-accent">Story</span>
         </h1>
 
-        {/* Subtitle */}
-        <p className="text-md text-slate-200 max-w-xl mx-auto leading-relaxed font-medium">
+        <p className="text-base text-gray-500 max-w-xl mx-auto leading-relaxed mb-12">
           Illuminating celebrations with safety, joy, and trust for over half a
           decade — serving 10K+ happy customers with certified quality.
         </p>
 
-        {/* Stats Cards */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 text-blue-950">
-
-          <div className="backdrop-blur-xl bg-white/80 p-6 rounded-2xl shadow-lg
-           border border-white/50 ">
-            <h3 className="text-4xl font-bold text-red-600">10K+</h3>
-            <p className="mt-2 font-semibold">Happy Customers</p>
-          </div>
-
-          <div className="backdrop-blur-xl bg-white/80 p-6 rounded-2xl shadow-lg border
-           border-white/50">
-            <h3 className="text-4xl font-bold text-blue-800">5+</h3>
-            <p className="mt-2 font-semibold">Years Experience</p>
-          </div>
-
-          <div className="backdrop-blur-xl bg-white/80 p-6 rounded-2xl shadow-lg border 
-          border-white/50">
-            <h3 className="text-4xl font-bold text-red-600">100%</h3>
-            <p className="mt-2 font-semibold">Safety Certified</p>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-3xl mx-auto">
+          {[
+            { value: '10K+', label: 'Happy Customers' },
+            { value: '5+', label: 'Years Experience' },
+            { value: '100%', label: 'Safety Certified' },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <h3 className="text-3xl font-bold text-accent mb-1">
+                {stat.value}
+              </h3>
+              <p className="text-gray-500 text-sm font-medium">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -113,42 +113,31 @@ const Products = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-600 font-medium">
-            Loading premium crackers...
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-6 h-6 border-2 border-gray-200 border-t-accent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 font-sans pt-24 md:pt-32">
-      {/* Header Banner */}
-      <div className="bg-white border-b border-slate-100 relative mb-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-50/50 to-red-50/30 pointer-events-none" />
-        <div className="container mx-auto px-6 py-8 relative">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold tracking-[0.15em] uppercase mb-3">
+    <div className="min-h-screen bg-white pb-16 pt-16">
+      {/* Header */}
+      <div className="bg-gray-50 border-b border-gray-200 mb-8">
+        <div className="container-custom mx-auto px-4 md:px-6 py-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             Our Collection
-          </span>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-2">
-            Premium{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
-              Collection
-            </span>
           </h1>
-          <p className="text-slate-500 font-medium text-base md:text-lg">
-            Explore our wide range of high-quality crackers for every occasion.
+          <p className="text-gray-500 text-sm max-w-xl">
+            Explore our curated range of high-quality crackers for every
+            occasion.
           </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="container-custom mx-auto px-4 md:px-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* SIDEBAR (Desktop) */}
-          <aside className="hidden lg:block w-72 shrink-0">
+          <aside className="hidden lg:block w-64 shrink-0">
             <ProductSidebar
               categories={categories}
               selectedCategories={selectedCategories}
@@ -166,50 +155,51 @@ const Products = () => {
           </aside>
 
           {/* MOBILE FILTER TOGGLE */}
-          <div className="lg:hidden mb-4">
+          <div className="lg:hidden mb-2">
             <button
               onClick={() => setShowMobileSidebar(true)}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 py-3 rounded-xl font-bold text-slate-700 shadow-sm transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 py-2.5 rounded-lg font-semibold text-gray-700 text-sm hover:bg-gray-50 transition-colors active:scale-[0.98]"
             >
-              <SlidersHorizontal size={18} />
+              <SlidersHorizontal size={16} />
               Filters & Sort
             </button>
           </div>
 
           {/* MAIN CONTENT */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {/* TOOLBAR */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-3 md:p-4 rounded-2xl border border-slate-100 shadow-sm">
-              {/* View Toggles */}
-              <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-gray-200">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all duration-300 ${viewMode === 'grid' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-brand-light text-accent' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  <LayoutGrid size={18} />
+                  <LayoutGrid size={16} />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all duration-300 ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-brand-light text-accent' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  <List size={18} />
+                  <List size={16} />
                 </button>
               </div>
 
-              <div className="text-slate-400 font-semibold text-sm hidden md:block">
-                {filteredProducts.length} products found
-              </div>
+              <span className="text-gray-500 text-sm hidden md:block">
+                <span className="font-semibold text-gray-900">
+                  {filteredProducts.length}
+                </span>{' '}
+                products
+              </span>
 
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-2.5">
-                <span className="text-slate-400 font-medium text-sm hidden sm:block">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-sm hidden sm:block">
                   Sort:
                 </span>
                 <div className="relative">
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none bg-slate-50 border border-slate-200 pl-4 pr-10 py-2 rounded-xl font-semibold text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-200 cursor-pointer hover:border-slate-300 transition-all duration-300"
+                    className="appearance-none bg-white border border-gray-200 pl-3 pr-8 py-1.5 rounded-lg text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer"
                   >
                     <option value="default">Default</option>
                     <option value="price-low-high">Price: Low to High</option>
@@ -217,8 +207,8 @@ const Products = () => {
                     <option value="name-a-z">Name: A to Z</option>
                   </select>
                   <ArrowUpDown
-                    size={14}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                    size={12}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                   />
                 </div>
               </div>
@@ -226,15 +216,15 @@ const Products = () => {
 
             {/* PRODUCT LISTING */}
             {filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-white to-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl flex items-center justify-center text-orange-300 mb-6 rotate-3">
-                  <FolderSearch size={36} />
+              <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-gray-300 mb-6 border border-gray-100">
+                  <FolderSearch size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">
-                  No products found
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  No Products Found
                 </h3>
-                <p className="text-slate-400 text-sm mb-6">
-                  Try adjusting your filters or search criteria
+                <p className="text-gray-500 text-sm mb-6 max-w-sm text-center">
+                  Try adjusting your filters.
                 </p>
                 <button
                   onClick={() => {
@@ -244,13 +234,13 @@ const Products = () => {
                     setInStockOnly(false);
                     setOutOfStockOnly(false);
                   }}
-                  className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-semibold hover:bg-black transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/20"
+                  className="px-5 py-2 bg-accent text-white rounded-lg text-sm font-semibold hover:bg-brand-dark transition-colors"
                 >
                   Clear All Filters
                 </button>
               </div>
             ) : (
-              <div className="space-y-12">
+              <div className="space-y-10">
                 {sortedCategories.map((categoryName) => (
                   <ProductSection
                     key={categoryName}
@@ -269,25 +259,21 @@ const Products = () => {
       {/* MOBILE SIDEBAR DRAWER */}
       {showMobileSidebar && (
         <div className="fixed inset-0 z-[1001] flex lg:hidden">
-          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setShowMobileSidebar(false)}
-          ></div>
-
-          {/* Drawer */}
-          <div className="relative w-[300px] h-full bg-white shadow-2xl overflow-y-auto p-6 animate-in slide-in-from-left duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black font-heading text-slate-900">
-                Filters
-              </h2>
+          />
+          <div className="relative w-[85%] max-w-[320px] h-full bg-white shadow-xl overflow-y-auto p-5">
+            <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+              <h2 className="text-lg font-bold text-gray-900">Filters</h2>
               <button
                 onClick={() => setShowMobileSidebar(false)}
-                className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:text-red-500 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
+
             <ProductSidebar
               categories={categories}
               selectedCategories={selectedCategories}
@@ -302,10 +288,11 @@ const Products = () => {
               outOfStockOnly={outOfStockOnly}
               setOutOfStockOnly={setOutOfStockOnly}
             />
-            <div className="mt-8 pt-4 border-t border-slate-100 sticky bottom-0 bg-white pb-4">
+
+            <div className="mt-6 pt-4 border-t border-gray-100 sticky bottom-0 bg-white pb-4">
               <button
                 onClick={() => setShowMobileSidebar(false)}
-                className="w-full py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95"
+                className="w-full py-3 bg-accent text-white font-semibold rounded-lg text-sm hover:bg-brand-dark transition-colors"
               >
                 Show {filteredProducts.length} Results
               </button>
@@ -314,7 +301,6 @@ const Products = () => {
         </div>
       )}
 
-      {/* Quick View Modal */}
       {selectedProduct && (
         <QuickViewModal
           product={selectedProduct}

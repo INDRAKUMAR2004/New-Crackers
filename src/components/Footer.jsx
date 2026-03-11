@@ -1,16 +1,12 @@
 import React from 'react';
 import {
   Phone,
-  Mail,
   MapPin,
   Facebook,
   Instagram,
   Twitter,
   MessageCircle,
   ArrowRight,
-  Heart,
-  Send,
-  ExternalLink,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -41,21 +37,17 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-slate-900 font-sans pt-16 pb-8 relative overflow-hidden">
-      {/* Decorative accents */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-14">
+    <footer className="bg-gray-50 pt-16 pb-8 border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-6 md:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
           {/* Brand Column */}
           <div className="space-y-5">
-            <Link to="/" className="inline-block group">
-              <h2 className="text-2xl font-black text-white tracking-tight group-hover:opacity-80 transition-opacity">
-                Dheeran <span className="text-orange-500">Crackers</span>
+            <Link to="/" className="inline-block">
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                Dheeran <span className="text-accent">Crackers</span>
               </h2>
             </Link>
-            <p className="text-slate-400 leading-relaxed text-sm pr-4">
+            <p className="text-gray-500 leading-relaxed text-sm pr-4">
               Premium fireworks for your special celebrations. We deliver joy,
               safety, and spectacular moments directly to your doorstep.
             </p>
@@ -66,7 +58,7 @@ const Footer = () => {
                   key={index}
                   href={social.href}
                   aria-label={social.label}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 hover:-translate-y-0.5"
+                  className="w-9 h-9 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-500 hover:bg-accent hover:text-white hover:border-accent transition-all duration-200"
                 >
                   {social.icon}
                 </a>
@@ -76,23 +68,17 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-6">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5">
               Explore
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {quickLinks.map((link, i) => (
                 <li key={i}>
                   <Link
                     to={link.path}
-                    className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors text-sm group"
+                    className="text-gray-500 hover:text-accent transition-colors text-sm"
                   >
-                    <ArrowRight
-                      size={12}
-                      className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                    />
-                    <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      {link.name}
-                    </span>
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -101,23 +87,17 @@ const Footer = () => {
 
           {/* Support */}
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-6">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5">
               Support
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {supportLinks.map((link, i) => (
                 <li key={i}>
                   <a
                     href={link.path}
-                    className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors text-sm group"
+                    className="text-gray-500 hover:text-accent transition-colors text-sm"
                   >
-                    <ArrowRight
-                      size={12}
-                      className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                    />
-                    <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      {link.name}
-                    </span>
+                    {link.name}
                   </a>
                 </li>
               ))}
@@ -126,52 +106,47 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-6">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5">
               Contact Us
             </h3>
 
             <div className="space-y-4 mb-6">
-              <a
-                href="#"
-                className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
-              >
-                <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-brand-light text-accent flex items-center justify-center shrink-0 mt-0.5">
                   <MapPin size={16} />
                 </div>
-                <div>
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    123 Firework Street, Sivakasi,
-                    <br />
-                    Tamil Nadu - 626123
-                  </p>
-                </div>
-              </a>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  123 Firework Street, Sivakasi,
+                  <br />
+                  Tamil Nadu - 626123
+                </p>
+              </div>
 
               <a
                 href="tel:+919876543210"
-                className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                className="flex items-center gap-3 group"
               >
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-8 h-8 rounded-lg bg-brand-light text-accent flex items-center justify-center shrink-0">
                   <Phone size={16} />
                 </div>
-                <span className="text-slate-400 font-semibold text-sm group-hover:text-blue-400 transition-colors">
+                <span className="text-gray-600 font-medium text-sm group-hover:text-accent transition-colors">
                   +91 98765 43210
                 </span>
               </a>
             </div>
 
-            <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-              <h4 className="text-xs font-bold text-white mb-2">
+            <div className="bg-white p-4 rounded-xl border border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">
                 Subscribe to offers
               </h4>
-              <form className="flex gap-2 relative">
+              <form className="flex gap-2">
                 <input
                   type="email"
                   placeholder="Email address"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-3 pr-10 py-2.5 text-xs font-medium outline-none focus:border-orange-500/50 transition-all placeholder:text-slate-500 text-white"
+                  className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 text-gray-900"
                 />
-                <button className="absolute right-1 top-1 bottom-1 bg-orange-500 text-white p-1.5 rounded-md hover:bg-orange-600 transition-colors">
-                  <ArrowRight size={14} />
+                <button className="bg-accent text-white px-3 py-2 rounded-lg hover:bg-brand-dark transition-colors shrink-0">
+                  <ArrowRight size={16} />
                 </button>
               </form>
             </div>
@@ -179,22 +154,20 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs font-medium text-slate-500 flex items-center gap-1">
-            &copy; {currentYear} Dheeran Crackers. Made with{' '}
-            <Heart size={12} className="text-rose-500 fill-rose-500" /> in
-            India.
+        <div className="border-t border-gray-200 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-gray-400 flex items-center gap-1">
+            &copy; {currentYear} Dheeran Crackers.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             <Link
               to="#"
-              className="text-xs font-medium text-slate-500 hover:text-white transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               to="#"
-              className="text-xs font-medium text-slate-500 hover:text-white transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
               Terms of Service
             </Link>

@@ -1,14 +1,14 @@
-import React from 'react'
-import WhoWeAre from './WhoWeAre'
-import QualitySafety from './QualitySafety'
-import MissionVision from './MissionVision'
-import CustomerTrust from './CustomerTrust'
-import AboutBanner from './AboutBanner'
-import AboutTestimonial from './AboutTestimonial'
+import React from 'react';
+import WhoWeAre from './WhoWeAre';
+import QualitySafety from './QualitySafety';
+import MissionVision from './MissionVision';
+import CustomerTrust from './CustomerTrust';
+import AboutBanner from './AboutBanner';
+import AboutTestimonial from './AboutTestimonial';
 
 const Aboutpage = () => {
   return (
-    <div className="pt-24 md:pt-28">
+    <div className="pt-16 bg-white">
       <AboutBanner />
       <WhoWeAre />
       <QualitySafety />
@@ -16,7 +16,7 @@ const Aboutpage = () => {
       <CustomerTrust />
       <AboutTestimonial />
     </div>
-  )
-}
+  );
+};
 
-export default Aboutpage
+export default Aboutpage;

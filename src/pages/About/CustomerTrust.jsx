@@ -1,36 +1,31 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  UserGroupIcon,
-  TrophyIcon,
-  StarIcon,
-  ShieldCheckIcon,
-} from "@heroicons/react/24/solid";
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Trophy, Star, ShieldCheck } from 'lucide-react';
 
 const CustomerTrust = () => {
   const stats = [
     {
-      number: "10000",
-      suffix: "+",
-      label: "Happy Customers",
-      icon: <UserGroupIcon className="w-8 h-8" />,
+      number: '10000',
+      suffix: '+',
+      label: 'Happy Customers',
+      icon: <Users size={22} />,
     },
     {
-      number: "5",
-      suffix: "+",
-      label: "Years Experience",
-      icon: <TrophyIcon className="w-8 h-8" />,
+      number: '5',
+      suffix: '+',
+      label: 'Years Experience',
+      icon: <Trophy size={22} />,
     },
     {
-      number: "4.9",
-      suffix: " ★",
-      label: "Average Rating",
-      icon: <StarIcon className="w-8 h-8" />,
+      number: '4.9',
+      suffix: ' ★',
+      label: 'Average Rating',
+      icon: <Star size={22} />,
     },
     {
-      number: "100",
-      suffix: "%",
-      label: "Safety Certified",
-      icon: <ShieldCheckIcon className="w-8 h-8" />,
+      number: '100',
+      suffix: '%',
+      label: 'Safety Certified',
+      icon: <ShieldCheck size={22} />,
     },
   ];
 
@@ -43,14 +38,12 @@ const CustomerTrust = () => {
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
           setHasAnimated(true);
-
           stats.forEach((stat, index) => {
             const target = parseFloat(stat.number);
             const duration = 2000;
             const steps = 60;
             const increment = target / steps;
             let current = 0;
-
             const timer = setInterval(() => {
               current += increment;
               if (current >= target) {
@@ -58,9 +51,9 @@ const CustomerTrust = () => {
                 clearInterval(timer);
               }
               setCounters((prev) => {
-                const newCounters = [...prev];
-                newCounters[index] = current;
-                return newCounters;
+                const n = [...prev];
+                n[index] = current;
+                return n;
               });
             }, duration / steps);
           });
@@ -68,88 +61,44 @@ const CustomerTrust = () => {
       },
       { threshold: 0.3 }
     );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
   }, [hasAnimated]);
 
   return (
     <section
       ref={sectionRef}
-      className="relative py-20 px-6 bg-white text-blue-950
-     overflow-hidden font-family"
+      className="py-16 md:py-20 px-6 bg-gray-50 border-t border-gray-100"
     >
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="inline-block px-4 py-2 bg-blue-50 border
-           border-blue-100 rounded-full mb-4">
-            <span className="text-blue-900 text-sm font-semibold tracking-wider">
-              TRUSTED BY THOUSANDS
-            </span>
-          </div>
-
-          <h2 className="text-2xl md:text-4xl font-extrabold mb-4 drop-shadow-xs">
-            Numbers That{" "}
-            <span className="text-red-600 drop-shadow-xs">
-              Speak
-            </span>
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-brand-light text-accent text-xs font-semibold uppercase tracking-wider mb-4">
+            Trusted By Thousands
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            Numbers That <span className="text-accent">Speak</span>
           </h2>
-
-          <p className="text-md text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-500 max-w-xl mx-auto">
             Building trust through quality, safety, and customer satisfaction
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4
-         gap-6 md:gap-8 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((item, index) => (
             <div
               key={index}
-              className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl
-               transition-all duration-500 border border-gray-100 hover:border-red-600
-                overflow-hidden"
+              className="bg-white rounded-xl p-6 border border-gray-100 text-center hover:border-accent/20 hover:shadow-sm transition-all"
             >
-
-              <div className="relative z-10">
-                <div className="flex gap-5">
-                  {/* Icon */}
-                  <div
-                    className="text-5xl mb-4 transform group-hover:scale-125 
-                transition-transform duration-500 text-red-600 group-hover:text-red-700"
-                  >
-                    {item.icon}
-                  </div>
-
-                  {/* Number */}
-                  <h4
-                    className="text-2xl md:text-3xl font-extrabold mb-2
-                 text-blue-950 transition-colors"
-                  >
-                    {index === 2
-                      ? counters[index].toFixed(1)
-                      : Math.floor(counters[index]).toLocaleString()}
-                    <span className="text-red-600">
-                      {item.suffix}
-                    </span>
-                  </h4></div>
-
-                {/* Label */}
-                <p
-                  className="font-semibold text-gray-600 ml-10
-                group-hover:text-gray-800 transition-colors"
-                >
-                  {item.label}
-                </p>
+              <div className="w-10 h-10 rounded-lg bg-brand-light text-accent flex items-center justify-center mx-auto mb-3">
+                {item.icon}
               </div>
-
-              {/* Corner Decoration */}
-              <div className="absolute bottom-0 right-0 w-16 h-16 bg-blue-50
-               rounded-tl-full"></div>
+              <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                {index === 2
+                  ? counters[index].toFixed(1)
+                  : Math.floor(counters[index]).toLocaleString()}
+                <span className="text-accent">{item.suffix}</span>
+              </h4>
+              <p className="text-sm text-gray-500 font-medium">{item.label}</p>
             </div>
           ))}
         </div>
