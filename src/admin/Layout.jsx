@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import Sidebar from "./Sidebar";
-import Footer from "../components/Footer";
-import { LayoutDashboard } from "lucide-react";
+import { useState, useEffect } from 'react';
+import Sidebar from './Sidebar';
+import NavbarAdmin from './NavbarAdmin';
+import { Toaster } from 'react-hot-toast';
 
 export default function Layout({ children }) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Handle Resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -20,50 +18,51 @@ export default function Layout({ children }) {
       }
     };
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Default Website Navbar - Fixed Top */}
-      <Navbar />
+    <div className="min-h-screen bg-[#f4f5f7]">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#172b4d',
+            color: '#fff',
+            fontSize: '13px',
+            fontWeight: 500,
+            borderRadius: '6px',
+            padding: '10px 16px',
+          },
+          success: { style: { background: '#0078d4' } },
+          error: { style: { background: '#de350b' } },
+        }}
+      />
 
-      {/* spacer for fixed navbar - Navbar height varies but ~88px is a good safe zone */}
-      <div className="h-[88px] w-full"></div>
+      {/* Top Navbar */}
+      <NavbarAdmin
+        toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+        isSidebarOpen={isSidebarOpen}
+      />
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-[52px]"></div>
 
       <div className="flex relative">
-        {/* Mobile Admin Menu Toggle - Visible only on mobile when sidebar is closed */}
-        {isMobile && !isSidebarOpen && (
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-28 left-4 z-30 p-2.5 bg-slate-900 text-white rounded-full shadow-lg border border-slate-700 hover:bg-slate-800 transition-transform active:scale-95 flex items-center gap-2"
-          >
-            <LayoutDashboard size={20} />
-            <span className="text-xs font-bold pr-1">Admin Menu</span>
-          </button>
-        )}
-
-        {/* Sidebar - Stuck to the left on Desktop, Fixed drawer on Mobile */}
+        {/* Sidebar */}
         <Sidebar
           isOpen={isSidebarOpen}
           setIsOpen={setSidebarOpen}
           isMobile={isMobile}
-          navbarHeight="top-[88px]"
         />
 
-        {/* Main Content Area */}
-        <main
-          className="flex-1 flex flex-col transition-all duration-300 ease-in-out min-h-[calc(100vh-88px)]"
-        >
-          <div className="flex-1 p-6">
-            {children}
-          </div>
+        {/* Main Content */}
+        <main className="flex-1 min-h-[calc(100vh-52px)] transition-all duration-200">
+          <div className="p-6 max-w-[1400px] mx-auto">{children}</div>
         </main>
       </div>
-
-      {/* Footer - Third Layer (Full Width, below Sidebar & Content) */}
-      <Footer />
     </div>
   );
 }

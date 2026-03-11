@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { Plus, UploadCloud, Eye, Pencil, Trash, X, Layout } from "lucide-react";
-import { db, storage } from "../firebaseConfig";
+import { useState, useEffect } from 'react';
+import { Plus, UploadCloud, Eye, Pencil, Trash, X } from 'lucide-react';
+import { db, storage } from '../firebaseConfig';
+import toast from 'react-hot-toast';
 import {
   collection,
   addDoc,
@@ -10,30 +11,30 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 import {
   ref,
   uploadBytes,
   getDownloadURL,
   deleteObject,
-} from "firebase/storage";
+} from 'firebase/storage';
 
 const SliderManagement = () => {
   const [sliders, setSliders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  
+
   // Edit Mode Tracking
   const [isEditing, setIsEditing] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
 
   // Form States
-  const [title, setTitle] = useState("");
-  const [subTitle, setSubTitle] = useState("");
-  const [desc, setDesc] = useState("");
+  const [title, setTitle] = useState('');
+  const [subTitle, setSubTitle] = useState('');
+  const [desc, setDesc] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const [oldImageUrl, setOldImageUrl] = useState("");
+  const [oldImageUrl, setOldImageUrl] = useState('');
 
   // Other Modal States
   const [previewSlide, setPreviewSlide] = useState(null);
@@ -41,7 +42,7 @@ const SliderManagement = () => {
 
   // Fetch Data
   useEffect(() => {
-    const q = query(collection(db, "Sliders"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, 'Sliders'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setSliders(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
@@ -69,21 +70,22 @@ const SliderManagement = () => {
   };
 
   const resetForm = () => {
-    setTitle("");
-    setSubTitle("");
-    setDesc("");
+    setTitle('');
+    setSubTitle('');
+    setDesc('');
     setImagePreview(null);
     setImageFile(null);
     setIsEditing(false);
     setCurrentEditId(null);
-    setOldImageUrl("");
+    setOldImageUrl('');
     setOpenModal(false);
   };
 
   // --- SUBMIT (Add or Update) ---
   const handleSaveSlider = async () => {
-    if (!title || !desc) return alert("Please fill Title and Description!");
-    
+    if (!title || !desc)
+      return toast.error('Please fill Title and Description!');
+
     setLoading(true);
     try {
       let finalImageUrl = oldImageUrl;
@@ -103,7 +105,7 @@ const SliderManagement = () => {
 
       if (isEditing) {
         // UPDATE Logic
-        await updateDoc(doc(db, "Sliders", currentEditId), {
+        await updateDoc(doc(db, 'Sliders', currentEditId), {
           title,
           subTitle,
           desc,
@@ -113,9 +115,9 @@ const SliderManagement = () => {
         // ADD Logic
         if (!imageFile) {
           setLoading(false);
-          return alert("Please upload an image!");
+          return toast.error('Please upload an image!');
         }
-        await addDoc(collection(db, "Sliders"), {
+        await addDoc(collection(db, 'Sliders'), {
           title,
           subTitle,
           desc,
@@ -127,146 +129,192 @@ const SliderManagement = () => {
       resetForm();
     } catch (error) {
       console.error(error);
-      alert("Error saving data!");
+      toast.error('Error saving data!');
     }
     setLoading(false);
   };
 
   return (
-    <div className="p-6 lg:p-10 bg-[#f8fafc] min-h-screen font-sans text-black">
+    <div className="space-y-5 font-sans">
       {/* Header */}
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 flex items-center gap-3 tracking-tighter">
-            <Layout className="text-blue-600" size={36} /> Slider Admin
-          </h1>
-          <p className="text-slate-500 font-medium mt-1">Easily update your website banners.</p>
+          <h1 className="text-xl font-semibold text-[#172b4d]">Sliders</h1>
+          <p className="text-[13px] text-[#6b778c] mt-0.5">
+            {sliders.length} banner slides
+          </p>
         </div>
-
         <button
-          onClick={() => { setIsEditing(false); setOpenModal(true); }}
-          className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3.5 rounded-2xl font-bold shadow-lg shadow-red-200 transition-all active:scale-95"
+          onClick={() => {
+            setIsEditing(false);
+            setOpenModal(true);
+          }}
+          className="flex items-center gap-1.5 bg-[#0078d4] text-white px-4 py-2 rounded text-[13px] font-medium hover:bg-[#106ebe] transition-colors"
         >
-          <Plus size={20} /> Add New Slide
+          <Plus size={16} /> Add Slide
         </button>
       </div>
 
-      {/* Grid Layout */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Slider Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sliders.map((item, index) => (
-          <div key={item.id} className="group bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
-            <div className="relative h-48 overflow-hidden">
-              <img src={item.imageUrl} className="w-full h-full object-cover" alt="" />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-slate-900 px-3 py-1 rounded-full text-[10px] font-black uppercase">Slide {index + 1}</div>
+          <div
+            key={item.id}
+            className="bg-white rounded-lg border border-[#dfe1e6] overflow-hidden hover:shadow-md transition-shadow"
+          >
+            <div className="relative h-40 bg-[#f4f5f7] overflow-hidden">
+              <img
+                src={item.imageUrl}
+                className="w-full h-full object-cover"
+                alt=""
+              />
+              <span className="absolute top-2 left-2 bg-white text-[#172b4d] px-2 py-0.5 rounded text-[11px] font-semibold border border-[#dfe1e6]">
+                Slide {index + 1}
+              </span>
             </div>
-            
-            <div className="p-6">
-              <h3 className="text-lg font-black text-slate-800 line-clamp-1 italic">{item.title}</h3>
-              <p className="text-slate-500 text-sm mt-3 line-clamp-2 font-medium leading-relaxed">{item.desc}</p>
-              
-              <div className="flex gap-2 mt-6 pt-4 border-t border-slate-50">
-                <button onClick={() => setPreviewSlide(item)} className="flex-1 flex justify-center py-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-blue-50 transition-all"><Eye size={18}/></button>
-                <button onClick={() => openEditModal(item)} className="flex-1 flex justify-center py-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-amber-50 transition-all"><Pencil size={18}/></button>
-                <button onClick={() => setDeleteSlide(item)} className="flex-1 flex justify-center py-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-red-50 transition-all"><Trash size={18}/></button>
+            <div className="p-4">
+              <h3 className="text-[14px] font-semibold text-[#172b4d] line-clamp-1">
+                {item.title}
+              </h3>
+              <p className="text-[12px] text-[#6b778c] mt-1 line-clamp-2">
+                {item.desc}
+              </p>
+              <div className="flex gap-1.5 mt-3 pt-3 border-t border-[#f4f5f7]">
+                <button
+                  onClick={() => setPreviewSlide(item)}
+                  className="flex-1 flex justify-center py-1.5 rounded text-[#6b778c] hover:bg-[#e9f2ff] hover:text-[#0078d4] transition-colors"
+                >
+                  <Eye size={15} />
+                </button>
+                <button
+                  onClick={() => openEditModal(item)}
+                  className="flex-1 flex justify-center py-1.5 rounded text-[#6b778c] hover:bg-[#fff0b3] hover:text-[#974f0c] transition-colors"
+                >
+                  <Pencil size={15} />
+                </button>
+                <button
+                  onClick={() => setDeleteSlide(item)}
+                  className="flex-1 flex justify-center py-1.5 rounded text-[#6b778c] hover:bg-[#ffebe6] hover:text-[#de350b] transition-colors"
+                >
+                  <Trash size={15} />
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* MODAL - Compact & Attractive Version */}
+      {/* Add/Edit Modal */}
       {openModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
-          <div className="bg-white w-full max-w-xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/20">
-            
-            {/* Compact Header */}
-            <div className={`relative p-6 text-white ${isEditing ? 'bg-gradient-to-r from-amber-500 to-orange-600' : 'bg-gradient-to-r from-red-600 to-red-700'}`}>
-              <div className="relative z-10 flex justify-between items-center">
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/70 block mb-1">Banner Editor</span>
-                  <h3 className="text-xl font-black italic tracking-tighter uppercase">
-                    {isEditing ? 'Modify Slide' : 'New Creation'}
-                  </h3>
-                </div>
-                <button onClick={resetForm} className="p-2 bg-black/10 hover:bg-black/20 rounded-xl transition-all">
-                  <X size={20}/>
-                </button>
+        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 p-4">
+          <div className="bg-white w-full max-w-lg rounded-lg shadow-xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-[#dfe1e6] flex justify-between items-center bg-[#fafbfc]">
+              <div>
+                <p className="text-[11px] text-[#6b778c] uppercase font-semibold tracking-wide">
+                  Banner Editor
+                </p>
+                <h3 className="text-[15px] font-semibold text-[#172b4d]">
+                  {isEditing ? 'Edit Slide' : 'New Slide'}
+                </h3>
               </div>
+              <button
+                onClick={resetForm}
+                className="p-1.5 rounded hover:bg-[#dfe1e6] text-[#6b778c] transition-colors"
+              >
+                <X size={18} />
+              </button>
             </div>
-            
-            <div className="p-6 bg-slate-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {/* Title */}
+
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm font-black text-slate-700 uppercase tracking-widest ml-1">Main Title</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-white border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm" 
-                    value={title} 
-                    onChange={(e)=>setTitle(e.target.value)} 
+                  <label className="text-[11px] font-semibold text-[#6b778c] uppercase tracking-wide">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-[#fafbfc] border border-[#dfe1e6] p-2.5 rounded text-[13px] text-[#172b4d] outline-none focus:border-[#0078d4] focus:ring-2 focus:ring-[#0078d4]/20 transition-all"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                   />
                 </div>
-
-                {/* Subtitle */}
                 <div className="space-y-1">
-                  <label className="text-sm  font-black text-slate-700 uppercase tracking-widest ml-1">Badge Text</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-white border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm" 
-                    value={subTitle} 
-                    onChange={(e)=>setSubTitle(e.target.value)} 
+                  <label className="text-[11px] font-semibold text-[#6b778c] uppercase tracking-wide">
+                    Badge Text
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-[#fafbfc] border border-[#dfe1e6] p-2.5 rounded text-[13px] text-[#172b4d] outline-none focus:border-[#0078d4] focus:ring-2 focus:ring-[#0078d4]/20 transition-all"
+                    value={subTitle}
+                    onChange={(e) => setSubTitle(e.target.value)}
                   />
                 </div>
               </div>
 
-              {/* Compact Description */}
-              <div className="space-y-1 mb-4">
-                <label className="text-sm  font-black text-slate-700 uppercase tracking-widest ml-1">Description</label>
-                <textarea 
-                  className="w-full bg-white border border-slate-200 p-3 rounded-xl h-20 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-medium text-slate-600 text-sm transition-all shadow-sm resize-none" 
-                  value={desc} 
-                  onChange={(e)=>setDesc(e.target.value)} 
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-[#6b778c] uppercase tracking-wide">
+                  Description
+                </label>
+                <textarea
+                  className="w-full bg-[#fafbfc] border border-[#dfe1e6] p-2.5 rounded h-20 text-[13px] text-[#172b4d] outline-none focus:border-[#0078d4] focus:ring-2 focus:ring-[#0078d4]/20 transition-all resize-none"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
                 />
               </div>
 
-              {/* Small Image Preview Area */}
               <div className="space-y-1">
-                <label className="text-sm  font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">Banner Visual</label>
-                <label className="relative group w-full h-32 bg-white border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50/50 hover:border-blue-400 transition-all overflow-hidden">
+                <label className="text-[11px] font-semibold text-[#6b778c] uppercase tracking-wide">
+                  Banner Image
+                </label>
+                <label className="relative w-full h-28 bg-[#fafbfc] border-2 border-dashed border-[#dfe1e6] rounded flex flex-col items-center justify-center cursor-pointer hover:border-[#0078d4] transition-colors overflow-hidden">
                   {imagePreview ? (
                     <div className="w-full h-full relative">
-                      <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                        <p className="text-white font-black text-[10px] uppercase">Change Image</p>
+                      <img
+                        src={imagePreview}
+                        className="w-full h-full object-cover"
+                        alt="Preview"
+                      />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <p className="text-white text-[11px] font-medium">
+                          Change Image
+                        </p>
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <UploadCloud size={24} className="text-slate-400 mb-1"/>
-                      <p className="text-[10px] font-black text-slate-700 uppercase">Upload Banner</p>
+                      <UploadCloud size={22} className="text-[#a5adba] mb-1" />
+                      <p className="text-[11px] text-[#6b778c]">
+                        Upload Banner
+                      </p>
                     </div>
                   )}
-                  <input type="file" className="hidden" onChange={handleImage} />
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={handleImage}
+                  />
                 </label>
               </div>
 
               {/* Buttons */}
-              <div className="flex gap-3 mt-6">
-                <button 
-                  onClick={resetForm} 
-                  className="flex-1 py-3 bg-slate-200 text-slate-600 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-300 transition-all active:scale-95"
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={resetForm}
+                  className="flex-1 py-2 bg-[#f4f5f7] border border-[#dfe1e6] text-[#42526e] rounded text-[13px] font-medium hover:bg-[#ebecf0] transition-colors"
                 >
-                  Discard
+                  Cancel
                 </button>
-                <button 
-                  onClick={handleSaveSlider} 
-                  disabled={loading} 
-                  className={`flex-[2] py-3 text-white rounded-xl font-black uppercase tracking-widest text-sm
-                     shadow-lg transition-all active:scale-95 disabled:opacity-50  ${
-                    isEditing ? 'bg-amber-600 shadow-amber-100 cursor-pointer' : 'cursor-pointer bg-blue-600 shadow-blue-100'
-                  }`}
+                <button
+                  onClick={handleSaveSlider}
+                  disabled={loading}
+                  className="flex-[2] py-2 bg-[#0078d4] text-white rounded text-[13px] font-medium hover:bg-[#106ebe] transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Processing...' : isEditing ? 'Save Changes' : 'Publish Now'}
+                  {loading
+                    ? 'Saving...'
+                    : isEditing
+                      ? 'Save Changes'
+                      : 'Publish'}
                 </button>
               </div>
             </div>
@@ -274,41 +322,70 @@ const SliderManagement = () => {
         </div>
       )}
 
-      {/* PREVIEW MODAL */}
+      {/* Preview Modal */}
       {previewSlide && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex justify-center items-center z-50 p-4">
-           <div className="bg-white w-full max-w-sm rounded-[3rem] overflow-hidden shadow-2xl relative border-[8px] border-slate-900 animate-in zoom-in duration-300">
-              <div className="h-[500px] relative">
-                  <img src={previewSlide.imageUrl} className="w-full h-full object-cover" alt="" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-                  <div className="absolute bottom-10 left-6 right-6 text-white">
-                      <span className="bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block">{previewSlide.subTitle}</span>
-                      <h2 className="text-3xl font-black leading-tight mb-3 italic tracking-tighter">{previewSlide.title}</h2>
-                      <p className="text-white/70 text-sm font-medium leading-relaxed">{previewSlide.desc}</p>
-                  </div>
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+          <div className="bg-white w-full max-w-sm rounded-lg overflow-hidden shadow-xl relative">
+            <div className="h-[400px] relative">
+              <img
+                src={previewSlide.imageUrl}
+                className="w-full h-full object-cover"
+                alt=""
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-6 left-5 right-5 text-white">
+                {previewSlide.subTitle && (
+                  <span className="bg-[#0078d4] text-[11px] font-medium px-2.5 py-0.5 rounded mb-2 inline-block">
+                    {previewSlide.subTitle}
+                  </span>
+                )}
+                <h2 className="text-2xl font-semibold leading-tight mb-2">
+                  {previewSlide.title}
+                </h2>
+                <p className="text-white/70 text-[13px]">{previewSlide.desc}</p>
               </div>
-              <button onClick={()=>setPreviewSlide(null)} className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/40"><X/></button>
-           </div>
+            </div>
+            <button
+              onClick={() => setPreviewSlide(null)}
+              className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm p-1.5 rounded text-white hover:bg-white/40 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
       )}
 
-      {/* DELETE MODAL */}
+      {/* Delete Modal */}
       {deleteSlide && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white w-full max-w-sm p-8 rounded-[2.5rem] text-center shadow-2xl animate-in zoom-in duration-200">
-            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Trash size={40} />
+        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 p-4">
+          <div className="bg-white w-full max-w-sm p-6 rounded-lg shadow-xl text-center">
+            <div className="w-12 h-12 bg-[#ffebe6] text-[#de350b] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash size={24} />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Remove Slide?</h3>
-            <p className="text-slate-500 mt-2 font-medium text-sm">This banner will be permanently deleted from the database.</p>
-            <div className="flex gap-3 mt-8">
-              <button onClick={() => setDeleteSlide(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs uppercase">Cancel</button>
-              <button onClick={async () => {
-                const fileRef = ref(storage, deleteSlide.imageUrl);
-                await deleteObject(fileRef).catch(() => null);
-                await deleteDoc(doc(db, "Sliders", deleteSlide.id));
-                setDeleteSlide(null);
-              }} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-100 text-xs uppercase">Delete</button>
+            <h3 className="text-[15px] font-semibold text-[#172b4d] mb-1">
+              Delete Slide?
+            </h3>
+            <p className="text-[13px] text-[#6b778c] mb-5">
+              This banner will be permanently removed.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteSlide(null)}
+                className="flex-1 py-2 bg-[#f4f5f7] border border-[#dfe1e6] text-[#42526e] rounded text-[13px] font-medium hover:bg-[#ebecf0] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const fileRef = ref(storage, deleteSlide.imageUrl);
+                  await deleteObject(fileRef).catch(() => null);
+                  await deleteDoc(doc(db, 'Sliders', deleteSlide.id));
+                  setDeleteSlide(null);
+                }}
+                className="flex-1 py-2 bg-[#de350b] text-white rounded text-[13px] font-medium hover:bg-[#bf2600] transition-colors"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom';
 import {
   ShoppingBag,
   Package,
@@ -8,56 +8,80 @@ import {
   ListChecks,
   ChevronDown,
   LogOut,
-  Settings,
-  Sparkles,
-  Zap
-} from "lucide-react";
-import { useState } from "react";
+} from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from './AuthContext';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const menus = [
   {
-    name: "Dashboard",
-    path: "/admin-dashboard",
-    icon: <LayoutDashboard size={20} />,
+    name: 'Dashboard',
+    path: '/admin-dashboard',
+    icon: <LayoutDashboard size={18} />,
   },
   {
-    name: "Product Management",
-    icon: <Package size={20} />,
+    name: 'Products',
+    icon: <Package size={18} />,
     isSubmenu: true,
     subItems: [
-      { name: "Add Product", path: "/admin/add-product", icon: <PlusCircle size={18} /> },
-      { name: "Products List", path: "/admin/products", icon: <ListChecks size={18} /> },
+      {
+        name: 'Add Product',
+        path: '/admin/add-product',
+        icon: <PlusCircle size={16} />,
+      },
+      {
+        name: 'All Products',
+        path: '/admin/products',
+        icon: <ListChecks size={16} />,
+      },
     ],
   },
-  { name: "Orders Management", path: "/admin/orders", icon: <ShoppingBag size={20} /> },
-  { name: "Slider Management", path: "/admin/slider-management", icon: <Images size={20} /> },
+  { name: 'Orders', path: '/admin/orders', icon: <ShoppingBag size={18} /> },
+  {
+    name: 'Sliders',
+    path: '/admin/slider-management',
+    icon: <Images size={18} />,
+  },
 ];
 
-export default function Sidebar({ isOpen, setIsOpen, isMobile, navbarHeight = "top-0" }) {
+export default function Sidebar({ isOpen, setIsOpen, isMobile }) {
   const location = useLocation();
-  const [expandedMenus, setExpandedMenus] = useState({ "Product Management": true });
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [expandedMenus, setExpandedMenus] = useState({ Products: true });
 
   const toggleSubmenu = (name) => {
     setExpandedMenus((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
-  // Classes
-  const sidebarClasses = `
-    border-r border-white/40 z-40 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]
-    backdrop-blur-xl bg-white/70 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
-    ${isMobile
-      ? "fixed top-0 left-0 h-screen"
-      : `sticky ${navbarHeight} h-[calc(100vh-88px)] shrink-0`
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out');
+      navigate('/admin-login');
+    } catch {
+      toast.error('Logout failed');
     }
-    ${isOpen
-      ? "translate-x-0 w-72"
-      : `${isMobile ? "-translate-x-full" : "w-20"} lg:translate-x-0`
+  };
+
+  const sidebarClasses = `
+    border-r border-[#dfe1e6] z-40 transition-all duration-200 bg-white
+    ${
+      isMobile
+        ? 'fixed top-[52px] left-0 h-[calc(100vh-52px)]'
+        : 'sticky top-[52px] h-[calc(100vh-52px)] shrink-0'
+    }
+    ${
+      isOpen
+        ? 'translate-x-0 w-[220px]'
+        : `${isMobile ? '-translate-x-full' : 'w-[56px]'} lg:translate-x-0`
     }
   `;
 
   const overlayClasses = `
-    fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300
-    ${isOpen && isMobile ? "opacity-100 visible" : "opacity-0 invisible"}
+    fixed inset-0 bg-black/20 z-30 lg:hidden transition-opacity duration-200
+    ${isOpen && isMobile ? 'opacity-100 visible' : 'opacity-0 invisible'}
   `;
 
   return (
@@ -65,58 +89,53 @@ export default function Sidebar({ isOpen, setIsOpen, isMobile, navbarHeight = "t
       <div className={overlayClasses} onClick={() => setIsOpen(false)} />
 
       <aside className={sidebarClasses}>
-        <div className="flex flex-col h-full relative overflow-hidden">
-
-          {/* subtle decorative gradient */}
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/50 to-transparent pointer-events-none"></div>
-
-          {/* Navigation Items */}
-          <nav className="flex-1 px-4 pt-8 pb-6 space-y-2 overflow-y-auto customs-scrollbar relative z-10">
-
-            {/* Menu Label */}
-            {isOpen && (
-              <div className="px-4 mb-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Main Menu</p>
-              </div>
-            )}
-
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Navigation */}
+          <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
             {menus.map((item, index) => {
               const isSubmenu = item.isSubmenu;
               const isActive = location.pathname === item.path;
-              const isChildActive = isSubmenu && item.subItems.some(sub => location.pathname === sub.path);
+              const isChildActive =
+                isSubmenu &&
+                item.subItems.some((sub) => location.pathname === sub.path);
               const isExpanded = expandedMenus[item.name];
 
               if (isSubmenu) {
                 return (
-                  <div key={index} className="space-y-1 mb-2">
+                  <div key={index}>
                     <button
-                      onClick={() => !isOpen ? setIsOpen(true) : toggleSubmenu(item.name)}
+                      onClick={() =>
+                        !isOpen ? setIsOpen(true) : toggleSubmenu(item.name)
+                      }
                       className={`
-                        w-full flex items-center justify-between px-3 py-3 rounded-2xl transition-all duration-300 group
-                        ${isChildActive ? "bg-red-50 text-red-600 shadow-sm" : "hover:bg-white/60 hover:text-slate-900 text-slate-500"}
-                        ${!isOpen && "justify-center"}
+                        w-full flex items-center justify-between px-3 py-2 rounded text-[13px] font-medium transition-colors
+                        ${isChildActive ? 'bg-[#e9f2ff] text-[#0078d4]' : 'text-[#42526e] hover:bg-[#f4f5f7]'}
+                        ${!isOpen && 'justify-center'}
                       `}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`transition-colors duration-300 ${isChildActive ? "text-red-500" : "text-slate-400 group-hover:text-slate-600"}`}>
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={
+                            isChildActive ? 'text-[#0078d4]' : 'text-[#6b778c]'
+                          }
+                        >
                           {item.icon}
-                        </div>
-                        {isOpen && <span className="text-[14px] font-bold">{item.name}</span>}
+                        </span>
+                        {isOpen && <span>{item.name}</span>}
                       </div>
-
                       {isOpen && (
-                        <div className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : ""} ${isChildActive ? "text-red-500" : "text-slate-400"}`}>
-                          <ChevronDown size={14} strokeWidth={3} />
-                        </div>
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''} ${isChildActive ? 'text-[#0078d4]' : 'text-[#a5adba]'}`}
+                        />
                       )}
                     </button>
 
-                    {/* Submenu List */}
-                    <div className={`
-                      overflow-hidden transition-all duration-300 ease-in-out
-                      ${isOpen && isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
-                    `}>
-                      <div className="relative ml-5 pl-5 border-l border-slate-200/60 space-y-1 my-1">
+                    {/* Submenu */}
+                    <div
+                      className={`overflow-hidden transition-all duration-200 ${isOpen && isExpanded ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
+                    >
+                      <div className="ml-5 pl-3 border-l border-[#dfe1e6] space-y-0.5 py-1">
                         {item.subItems.map((sub) => {
                           const isSubActive = location.pathname === sub.path;
                           return (
@@ -125,16 +144,15 @@ export default function Sidebar({ isOpen, setIsOpen, isMobile, navbarHeight = "t
                               to={sub.path}
                               onClick={() => isMobile && setIsOpen(false)}
                               className={`
-                                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200
-                                ${isSubActive
-                                  ? "text-red-600 font-bold bg-white shadow-sm"
-                                  : "text-slate-500 hover:text-red-600 hover:translate-x-1 font-medium"}
+                                flex items-center gap-2 px-2.5 py-1.5 rounded text-[13px] transition-colors
+                                ${
+                                  isSubActive
+                                    ? 'text-[#0078d4] font-semibold bg-[#e9f2ff]'
+                                    : 'text-[#6b778c] hover:text-[#172b4d] hover:bg-[#f4f5f7]'
+                                }
                               `}
                             >
-                              {/* Dot indicator */}
-                              {isSubActive && <div className="w-1.5 h-1.5 rounded-full bg-red-600 absolute -left-[5.5px] shadow-[0_0_8px_rgba(220,38,38,0.5)]"></div>}
-
-                              <span className="truncate">{sub.name}</span>
+                              {sub.name}
                             </Link>
                           );
                         })}
@@ -144,37 +162,31 @@ export default function Sidebar({ isOpen, setIsOpen, isMobile, navbarHeight = "t
                 );
               }
 
-              // Standard Menu Item
               return (
                 <Link
                   key={index}
                   to={item.path}
                   onClick={() => isMobile && setIsOpen(false)}
                   className={`
-                    relative flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-300 group mb-1
-                    ${!isOpen && "justify-center"}
-                    ${isActive
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200 font-bold"
-                      : "text-slate-500 hover:bg-white/60 hover:text-slate-900 font-medium"}
+                    flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium transition-colors
+                    ${!isOpen && 'justify-center'}
+                    ${
+                      isActive
+                        ? 'bg-[#e9f2ff] text-[#0078d4]'
+                        : 'text-[#42526e] hover:bg-[#f4f5f7]'
+                    }
                   `}
                 >
-                  <div className={`${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"} transition-colors`}>
+                  <span
+                    className={isActive ? 'text-[#0078d4]' : 'text-[#6b778c]'}
+                  >
                     {item.icon}
-                  </div>
+                  </span>
+                  {isOpen && <span>{item.name}</span>}
 
-                  {isOpen && <span className="text-[14px] tracking-wide">{item.name}</span>}
-
-                  {/* Active Glow for standard items */}
-                  {isActive && isOpen && (
-                    <div className="absolute right-3 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
-                  )}
-
-                  {/* Tooltip for collapsed */}
                   {!isOpen && (
-                    <div className="absolute left-16 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50 shadow-xl whitespace-nowrap translate-x-3 group-hover:translate-x-0">
+                    <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#172b4d] text-white text-xs px-2.5 py-1.5 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
                       {item.name}
-                      {/* Arrow tip */}
-                      <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-slate-900"></div>
                     </div>
                   )}
                 </Link>
@@ -182,33 +194,16 @@ export default function Sidebar({ isOpen, setIsOpen, isMobile, navbarHeight = "t
             })}
           </nav>
 
-          {/* Bottom Actions / Profile */}
-          <div className="p-4 border-t border-slate-100 bg-white/30 backdrop-blur-md">
-
-            {isOpen && (
-              <div className="mb-4 bg-gradient-to-r from-red-600 to-orange-500 rounded-2xl p-4 text-center shadow-lg shadow-orange-200/50 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-[200%] bg-gradient-to-b from-white/20 to-transparent -translate-y-full group-hover:translate-y-full transition-transform duration-700 pointer-events-none"></div>
-                <Sparkles className="mx-auto text-white mb-1" size={20} />
-                <p className="text-white text-xs font-bold mb-2">Pro Features Active</p>
-                <button className="bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg transition-colors border border-white/20">
-                  View Plan
-                </button>
-              </div>
-            )}
-
-            <button className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-200 hover:bg-white group ${!isOpen && "justify-center"}`}>
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm">
-                <Settings size={18} />
-              </div>
-              {isOpen && (
-                <div className="text-left overflow-hidden">
-                  <p className="text-sm font-bold text-slate-700 group-hover:text-slate-900">Settings</p>
-                  <p className="text-[10px] text-slate-400 font-medium">System Preferences</p>
-                </div>
-              )}
+          {/* Bottom: Logout */}
+          <div className="p-2 border-t border-[#dfe1e6]">
+            <button
+              onClick={handleLogout}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-[#6b778c] hover:text-red-600 hover:bg-red-50 transition-colors ${!isOpen && 'justify-center'}`}
+            >
+              <LogOut size={18} />
+              {isOpen && <span>Sign out</span>}
             </button>
           </div>
-
         </div>
       </aside>
     </>
