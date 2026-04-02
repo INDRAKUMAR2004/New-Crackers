@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import InvoiceTemplate from './InvoiceTemplate';
 import { useOrders } from './OrderContext';
+import { getOrderCode } from '../utils/orderCode';
 
 const OrderManagement = () => {
   const { orders, loading, fetchOrders, updateOrderStatus, deleteOrder } =
@@ -39,6 +40,7 @@ const OrderManagement = () => {
         : null;
       const matchesSearch = search
         ? [
+            order.orderCode,
             order.id,
             order.customer?.name,
             order.customer?.phone,
@@ -62,14 +64,6 @@ const OrderManagement = () => {
       return matchesSearch && matchesStartDate && matchesEndDate;
     });
   }, [orders, search, startDate, endDate]);
-
-  const rankMap = useMemo(() => {
-    const map = {};
-    orders.forEach((order, index) => {
-      map[order.id] = index + 1;
-    });
-    return map;
-  }, [orders]);
 
   const getStatusConfig = (status) => {
     switch (status) {
@@ -167,6 +161,7 @@ const OrderManagement = () => {
 
   const handleDownloadPDF = (order) => {
     try {
+      const orderCode = getOrderCode(order);
       const doc = new jsPDF();
       doc.setFontSize(22);
       doc.setTextColor(220, 38, 38);
@@ -174,7 +169,7 @@ const OrderManagement = () => {
 
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Invoice: ORD-${rankMap[order.id]}`, 14, 30);
+      doc.text(`Invoice: ${orderCode}`, 14, 30);
       const dateStr = order.orderDate?.toDate
         ? format(order.orderDate.toDate(), 'dd-MM-yyyy')
         : 'N/A';
@@ -213,7 +208,7 @@ const OrderManagement = () => {
       doc.setFont(undefined, 'bold');
       doc.text(`Grand Total: Rs. ${order.total?.toLocaleString()}`, 14, finalY);
 
-      doc.save(`Invoice_${rankMap[order.id]}.pdf`);
+      doc.save(`Invoice_${orderCode}.pdf`);
     } catch (error) {
       console.error('PDF Error:', error);
       toast.error('Error generating PDF');
@@ -347,7 +342,7 @@ const OrderManagement = () => {
                     >
                       <td className="px-5 py-3.5">
                         <span className="text-[12px] font-mono font-semibold text-[#0065b3]">
-                          #{rankMap[order.id]}
+                          {getOrderCode(order)}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
@@ -447,7 +442,7 @@ const OrderManagement = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-[16px] font-semibold text-white">
-                      Order #{rankMap[selectedOrder.id]}
+                      Order {getOrderCode(selectedOrder)}
                     </h2>
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
@@ -660,7 +655,6 @@ const OrderManagement = () => {
       {invoiceOrder && (
         <InvoiceTemplate
           order={invoiceOrder}
-          rank={rankMap[invoiceOrder.id]}
           onClose={() => setInvoiceOrder(null)}
         />
       )}

@@ -9,7 +9,8 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const productPath = `/products/${encodeURIComponent(product.slug || product.id)}`;
 
-  const isAvailable = !product.outOfStock;
+  const stockCount = Number(product.stock) || 0;
+  const isAvailable = !product.outOfStock && stockCount > 0;
   const originalPrice = product.mrp || null;
   const sellingPrice = product.price || null;
   const discountPercent = originalPrice
@@ -154,7 +155,7 @@ const ProductCard = ({ product }) => {
               disabled
               className="w-full h-8 bg-gray-50 text-gray-400 border border-gray-100 rounded-lg text-xs font-medium"
             >
-              Notify Me
+              Sold Out
             </button>
           )}
         </div>

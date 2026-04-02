@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useCart } from '../../context/CartContext';
+import toast from 'react-hot-toast';
 import {
   ShieldCheck,
   ShoppingCart,
@@ -32,6 +33,9 @@ const ProductDetails = () => {
   const [tab, setTab] = useState('description');
   const [related, setRelated] = useState([]);
   const [activeImg, setActiveImg] = useState('');
+
+  const currentStock = Number(product?.stock) || 0;
+  const isOutOfStock = Boolean(product?.outOfStock) || currentStock <= 0;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -76,7 +80,15 @@ const ProductDetails = () => {
 
   const inc = () => setQty((q) => q + 1);
   const dec = () => setQty((q) => (q > 1 ? q - 1 : 1));
-  const add = () => addToCart({ ...product, qty });
+  const add = async () => {
+    if (isOutOfStock) {
+      toast.error('This product is out of stock');
+      return;
+    }
+
+    await addToCart({ ...product, qty });
+    toast.success('Added to cart');
+  };
 
   if (!product)
     return (
@@ -197,7 +209,17 @@ const ProductDetails = () => {
                   </div>
                 )}
               </div>
+              {isOutOfStock && (
+                <div className="mt-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                  Out of stock
+                </div>
+              )}
               <div className="h-px bg-gray-200 my-4" />
+              {currentStock > 0 && (
+                <p className="text-xs font-medium text-green-700 mb-3">
+                  Stock: {currentStock}
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-brand-light text-accent flex items-center justify-center">
@@ -226,28 +248,36 @@ const ProductDetails = () => {
 
             {/* Controls (Hidden on Mobile) */}
             <div className="hidden md:flex gap-3 mb-8">
-              <div className="flex items-center border border-gray-200 rounded-lg">
-                <button
-                  onClick={dec}
-                  className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="w-10 text-center font-bold text-gray-900">
-                  {qty}
-                </span>
-                <button
-                  onClick={inc}
-                  className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
+              {!isOutOfStock && (
+                <div className="flex items-center border border-gray-200 rounded-lg">
+                  <button
+                    onClick={dec}
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="w-10 text-center font-bold text-gray-900">
+                    {qty}
+                  </span>
+                  <button
+                    onClick={inc}
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              )}
               <button
                 onClick={add}
-                className="flex-1 bg-accent text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
+                disabled={isOutOfStock}
+                className={`flex-1 font-semibold px-6 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  isOutOfStock
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-accent text-white hover:bg-brand-dark'
+                }`}
               >
-                <ShoppingCart size={18} /> Add to Cart
+                <ShoppingCart size={18} />
+                {isOutOfStock ? 'Sold Out' : 'Add to Cart'}
               </button>
             </div>
 
@@ -381,28 +411,35 @@ const ProductDetails = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center border border-gray-200 rounded-lg h-10">
-              <button
-                onClick={dec}
-                className="w-8 h-full flex items-center justify-center text-gray-400"
-              >
-                <Minus size={14} />
-              </button>
-              <span className="w-6 text-center font-bold text-gray-900 text-sm">
-                {qty}
-              </span>
-              <button
-                onClick={inc}
-                className="w-8 h-full flex items-center justify-center text-gray-400"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
+            {!isOutOfStock && (
+              <div className="flex items-center border border-gray-200 rounded-lg h-10">
+                <button
+                  onClick={dec}
+                  className="w-8 h-full flex items-center justify-center text-gray-400"
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="w-6 text-center font-bold text-gray-900 text-sm">
+                  {qty}
+                </span>
+                <button
+                  onClick={inc}
+                  className="w-8 h-full flex items-center justify-center text-gray-400"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            )}
             <button
               onClick={add}
-              className="bg-accent text-white font-semibold rounded-lg h-10 px-5 flex items-center gap-1.5 text-sm"
+              disabled={isOutOfStock}
+              className={`font-semibold rounded-lg h-10 px-5 flex items-center gap-1.5 text-sm ${
+                isOutOfStock
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-accent text-white'
+              }`}
             >
-              <ShoppingCart size={16} /> Add
+              <ShoppingCart size={16} /> {isOutOfStock ? 'Sold Out' : 'Add'}
             </button>
           </div>
         </div>

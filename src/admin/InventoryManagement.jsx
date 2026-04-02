@@ -59,7 +59,7 @@ export default function InventoryManagement() {
     if (Object.prototype.hasOwnProperty.call(stockDraft, product.id)) {
       return stockDraft[product.id];
     }
-    return String(Number(product.stock) || 0);
+    return '';
   };
 
   const handleStockChange = (productId, value) => {
@@ -74,22 +74,25 @@ export default function InventoryManagement() {
 
   const saveStock = async (product) => {
     const raw = getDraftValue(product);
-    const stockValue = Number(raw);
+    const stockToAdd = Number(raw);
+    const currentStock = Number(product.stock) || 0;
 
-    if (!Number.isInteger(stockValue) || stockValue < 0) {
-      toast.error('Stock must be a non-negative whole number');
+    if (!Number.isInteger(stockToAdd) || stockToAdd <= 0) {
+      toast.error('Enter a stock quantity to add');
       return;
     }
 
     setSavingId(product.id);
     try {
-      const result = await updateStock(product.id, stockValue);
+      const result = await updateStock(product.id, stockToAdd);
 
       if (result.success) {
-        toast.success(`✓ Stock updated: ${product.name}`);
+        toast.success(
+          `✓ ${product.name}: ${currentStock} + ${stockToAdd} = ${result.stock}`
+        );
         setStockDraft((prev) => ({
           ...prev,
-          [product.id]: String(stockValue),
+          [product.id]: '',
         }));
       } else {
         toast.error(result.message || 'Failed to update stock');
@@ -296,6 +299,7 @@ export default function InventoryManagement() {
                         <input
                           type="text"
                           value={getDraftValue(product)}
+                          placeholder="Add qty"
                           onChange={(e) =>
                             handleStockChange(product.id, e.target.value)
                           }
@@ -313,7 +317,7 @@ export default function InventoryManagement() {
                           ) : (
                             <Save size={14} />
                           )}
-                          {savingId === product.id ? 'Saving...' : 'Update'}
+                          {savingId === product.id ? 'Saving...' : 'Add'}
                         </button>
                       </td>
                     </tr>

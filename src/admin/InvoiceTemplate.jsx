@@ -14,11 +14,12 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
+import { getOrderCode } from '../utils/orderCode';
 
-const InvoiceTemplate = ({ order, rank, onClose }) => {
+const InvoiceTemplate = ({ order, onClose }) => {
   const [downloading, setDownloading] = useState(false);
 
-  const invoiceNo = `INV-${String(rank).padStart(4, '0')}`;
+  const invoiceNo = getOrderCode(order);
   const dateStr = order.orderDate?.toDate
     ? format(order.orderDate.toDate(), 'dd MMM, yyyy')
     : 'N/A';
@@ -235,7 +236,7 @@ const InvoiceTemplate = ({ order, rank, onClose }) => {
         { align: 'center' }
       );
 
-      doc.save(`Invoice_${invoiceNo}_${order.id.slice(-6)}.pdf`);
+      doc.save(`Invoice_${invoiceNo}.pdf`);
       toast.success('Downloaded successfully!', { id: toastId });
     } catch (error) {
       console.error('Error generating PDF:', error);

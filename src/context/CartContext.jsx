@@ -1,15 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { db } from "../firebaseConfig";
-import {
-  doc,
-  setDoc,
-  onSnapshot,
-  updateDoc
-} from "firebase/firestore";
+import { createContext, useContext, useEffect, useState } from 'react';
+import { db } from '../firebaseConfig';
+import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 const CartContext = createContext();
 
-const CART_ID = "guest-cart"; // later → userId
+const CART_ID = 'guest-cart'; // later → userId
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
@@ -17,7 +12,7 @@ export const CartProvider = ({ children }) => {
 
   // 🔥 REALTIME CART LISTENER
   useEffect(() => {
-    const cartRef = doc(db, "carts", CART_ID);
+    const cartRef = doc(db, 'carts', CART_ID);
 
     const unsub = onSnapshot(cartRef, (snap) => {
       if (snap.exists()) {
@@ -30,7 +25,7 @@ export const CartProvider = ({ children }) => {
 
   // 🔥 SAVE CART TO FIREBASE
   const saveCart = async (items) => {
-    const cartRef = doc(db, "carts", CART_ID);
+    const cartRef = doc(db, 'carts', CART_ID);
     await setDoc(
       cartRef,
       {
@@ -43,15 +38,20 @@ export const CartProvider = ({ children }) => {
 
   // ✅ ADD TO CART
   const addToCart = async (product) => {
+    const stock = Number(product?.stock) || 0;
+    const isOutOfStock = Boolean(product?.outOfStock) || stock <= 0;
+
+    if (isOutOfStock) {
+      return { success: false, message: 'Product is out of stock' };
+    }
+
     let updatedCart;
 
     const exists = cart.find((p) => p.id === product.id);
 
     if (exists) {
       updatedCart = cart.map((p) =>
-        p.id === product.id
-          ? { ...p, qty: p.qty + product.qty }
-          : p
+        p.id === product.id ? { ...p, qty: p.qty + product.qty } : p
       );
     } else {
       updatedCart = [...cart, product];

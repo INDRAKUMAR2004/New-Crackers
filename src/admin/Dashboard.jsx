@@ -13,6 +13,7 @@ import { useOrders } from './OrderContext';
 import { useProducts } from './ProductContext';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { getOrderCode } from '../utils/orderCode';
 
 export default function Dashboard() {
   const { orders, loading: ordersLoading } = useOrders();
@@ -181,7 +182,7 @@ export default function Dashboard() {
                     >
                       <td className="px-5 py-3">
                         <span className="text-[12px] font-mono font-medium text-[#0078d4]">
-                          #{order.id.slice(-6).toUpperCase()}
+                          {getOrderCode(order)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -262,10 +263,10 @@ export default function Dashboard() {
 
           <div className="p-4 border-t border-[#dfe1e6]">
             <Link
-              to="/admin/products"
+              to="/admin/inventory"
               className="w-full py-2 bg-[#0078d4] text-white rounded text-[13px] font-medium flex items-center justify-center gap-1.5 hover:bg-[#106ebe] transition-colors"
             >
-              Manage Inventory <ArrowRight size={14} />
+              View Inventory <ArrowRight size={14} />
             </Link>
           </div>
         </div>

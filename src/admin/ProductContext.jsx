@@ -2,7 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db, collection, addDoc, getDocs } from '../firebaseConfig';
-import { deleteDoc, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import {
+  deleteDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  onSnapshot,
+} from 'firebase/firestore';
 
 const ProductContext = createContext();
 
@@ -46,13 +52,7 @@ export const ProductProvider = ({ children }) => {
       };
 
       // 🚀 Add data to Firestore collection "products"
-      const docRef = await addDoc(productsCollectionRef, dataToSave);
-
-      // Local state-ஐ update செய்யும், இதனால் ProductsList உடனே update ஆகும்
-      setProducts((prevProducts) => [
-        ...prevProducts,
-        { ...dataToSave, id: docRef.id },
-      ]);
+      await addDoc(productsCollectionRef, dataToSave);
 
       return {
         success: true,
@@ -80,14 +80,6 @@ export const ProductProvider = ({ children }) => {
 
       await updateDoc(doc(db, 'products', productId), dataToSave);
 
-      setProducts((prevProducts) =>
-        prevProducts.map((item) =>
-          item.id === productId
-            ? { ...item, ...dataToSave, id: productId }
-            : item
-        )
-      );
-
       return {
         success: true,
         message: 'Product updated successfully!',
@@ -105,20 +97,30 @@ export const ProductProvider = ({ children }) => {
   const fetchProducts = async () => {
     console.log('Using real-time updates via onSnapshot');
   };
-  const updateStock = async (productId, stockValue) => {
+  const updateStock = async (productId, stockToAdd) => {
     try {
-      // Validate stock value
-      if (!Number.isInteger(stockValue) || stockValue < 0) {
+      // Validate stock increment
+      if (!Number.isInteger(stockToAdd) || stockToAdd < 0) {
         throw new Error('Stock must be a non-negative whole number');
       }
 
-      await updateDoc(doc(db, 'products', productId), {
-        stock: stockValue,
-        outOfStock: stockValue <= 0,
+      const productRef = doc(db, 'products', productId);
+      const productSnap = await getDoc(productRef);
+
+      if (!productSnap.exists()) {
+        throw new Error('Product not found');
+      }
+
+      const currentStock = Number(productSnap.data()?.stock) || 0;
+      const nextStock = currentStock + stockToAdd;
+
+      await updateDoc(productRef, {
+        stock: nextStock,
+        outOfStock: nextStock <= 0,
         updatedAt: new Date(),
       });
 
-      return { success: true };
+      return { success: true, stock: nextStock };
     } catch (error) {
       console.error('Error updating stock:', error);
       return {

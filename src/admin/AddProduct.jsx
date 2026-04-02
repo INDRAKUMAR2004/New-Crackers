@@ -96,6 +96,7 @@ const AddProduct = () => {
   const storage = getStorage();
 
   const editingProduct = location.state?.editingProduct || null;
+  const existingStock = Number(editingProduct?.stock) || 0;
 
   // States
   const [uploading, setUploading] = useState(false);
@@ -137,7 +138,7 @@ const AddProduct = () => {
   // Effects
   useEffect(() => {
     if (editingProduct) {
-      setProduct(editingProduct);
+      setProduct({ ...editingProduct, stock: '' });
       setIsSkuManuallyEdited(true);
       const initialImages = Array.isArray(editingProduct.images)
         ? editingProduct.images.filter(Boolean)
@@ -363,9 +364,15 @@ const AddProduct = () => {
         products.map((p) => p.slug || p.name),
         editingProduct?.slug || ''
       );
+      const enteredStock = Number(product.stock) || 0;
+      const finalStock = editingProduct
+        ? existingStock + enteredStock
+        : enteredStock;
       const finalData = {
         ...product,
         ...uploaded,
+        stock: finalStock,
+        outOfStock: finalStock <= 0,
         slug: finalProductSlug,
         categorySlug:
           selectedCategory?.slug ||
@@ -565,7 +572,11 @@ const AddProduct = () => {
                 value={product.stock}
                 onChange={handleChange}
                 placeholder="0"
-                helpText="Initial stock quantity for this product"
+                helpText={
+                  editingProduct
+                    ? `Current stock: ${existingStock}. Enter additional quantity to add.`
+                    : 'Initial stock quantity for this product'
+                }
               />
               <InputField
                 label="Pack / Unit"

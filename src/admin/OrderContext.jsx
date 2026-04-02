@@ -10,7 +10,11 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDocs,
+  where,
+  limit,
 } from 'firebase/firestore';
+import { generateOrderCode } from '../utils/orderCode';
 
 const OrderContext = createContext();
 
@@ -66,17 +70,41 @@ export const OrderProvider = ({ children }) => {
     setRefreshKey((value) => value + 1);
   };
 
+  const generateUniqueOrderCode = async () => {
+    const now = new Date();
+
+    for (let attempt = 0; attempt < 25; attempt += 1) {
+      const orderCode = generateOrderCode(now);
+      const existing = await getDocs(
+        query(
+          collection(db, 'orders'),
+          where('orderCode', '==', orderCode),
+          limit(1)
+        )
+      );
+
+      if (existing.empty) {
+        return orderCode;
+      }
+    }
+
+    throw new Error('Unable to generate a unique order code.');
+  };
+
   const addOrder = async (orderData) => {
     try {
+      const orderCode = await generateUniqueOrderCode();
+
       const docRef = await addDoc(collection(db, 'orders'), {
         ...orderData,
+        orderCode,
         orderDate: Timestamp.now(),
         paymentStatus: 'Pending',
         orderStatus: 'New WhatsApp',
         deliveryDate: null,
       });
       console.log('Order saved to Firestore with ID: ', docRef.id);
-      return { success: true, id: docRef.id };
+      return { success: true, id: docRef.id, orderCode };
     } catch (error) {
       console.error('Error saving order to Firestore:', error);
       return { success: false, error: error.message };

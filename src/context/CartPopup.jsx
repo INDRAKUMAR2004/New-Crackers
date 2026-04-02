@@ -98,7 +98,7 @@ ${cart
     customerDetails.city;
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 font-sans">
+    <div className="fixed inset-0 z-1000 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 font-sans">
       <div className="bg-white w-full max-w-6xl h-[95vh] md:h-[88vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
         {/* HEADER */}
         <div className="flex items-center justify-between px-8 py-4 bg-gray-900 text-white">
