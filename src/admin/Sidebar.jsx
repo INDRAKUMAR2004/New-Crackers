@@ -2,7 +2,9 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   ShoppingBag,
   Package,
+  Tags,
   Images,
+  Boxes,
   LayoutDashboard,
   PlusCircle,
   ListChecks,
@@ -35,9 +37,19 @@ const menus = [
         path: '/admin/products',
         icon: <ListChecks size={16} />,
       },
+      {
+        name: 'Inventory',
+        path: '/admin/inventory',
+        icon: <Boxes size={16} />,
+      },
     ],
   },
   { name: 'Orders', path: '/admin/orders', icon: <ShoppingBag size={18} /> },
+  {
+    name: 'Categories',
+    path: '/admin/category-management',
+    icon: <Tags size={18} />,
+  },
   {
     name: 'Sliders',
     path: '/admin/slider-management',

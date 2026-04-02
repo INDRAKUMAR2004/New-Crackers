@@ -1,8 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '../../admin/ProductContext';
 import QuickViewModal from '../../components/QuickViewModal';
 import ProductSidebar from './ProductSidebar';
 import ProductSection from './ProductSection';
+import { ProductGridSkeleton } from '../../components/SkeletonLoader';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 import {
   FolderSearch,
   LayoutGrid,
@@ -14,6 +18,7 @@ import {
 
 const Products = () => {
   const { products, loading } = useProducts();
+  const [searchParams] = useSearchParams();
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Filter States
@@ -28,12 +33,47 @@ const Products = () => {
   const [sortBy, setSortBy] = useState('default');
   const [viewMode, setViewMode] = useState('grid'); // grid | list
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [managedCategories, setManagedCategories] = useState([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
 
-  // Extract unique categories
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'categories'), (snapshot) => {
+      const next = snapshot.docs
+        .map((doc) => ({
+          name: (doc.data().name || '').trim(),
+          slug: (doc.data().slug || '').trim(),
+        }))
+        .filter((item) => item.name)
+        .sort((a, b) => a.name.localeCompare(b.name));
+      setManagedCategories(next);
+      setCategoriesLoaded(true);
+    });
+
+    return () => unsub();
+  }, []);
+
   const categories = useMemo(() => {
-    const cats = products.map((p) => p.category || 'Others');
-    return [...new Set(cats)].sort();
-  }, [products]);
+    return managedCategories.map((item) => item.name);
+  }, [managedCategories]);
+
+  useEffect(() => {
+    const requestedCategory = (searchParams.get('category') || '').trim();
+    if (!requestedCategory) return;
+
+    const matchedBySlug = managedCategories.find(
+      (item) => item.slug && item.slug === requestedCategory
+    );
+    const categoryForFilter = matchedBySlug?.name || requestedCategory;
+    const isAllowedCategory = managedCategories.some(
+      (item) => item.name === categoryForFilter
+    );
+    if (!isAllowedCategory) return;
+
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryForFilter)) return prev;
+      return [...prev, categoryForFilter];
+    });
+  }, [searchParams, managedCategories]);
 
   const handleCategoryChange = (cat) => {
     setSelectedCategories((prev) =>
@@ -46,10 +86,30 @@ const Products = () => {
     let result = products.filter((product) => {
       if (product.hideProduct) return false;
 
+      // Only categories configured in Category Management should appear on user pages.
+      const belongsToManagedCategory =
+        managedCategories.length > 0 &&
+        managedCategories.some(
+          (item) =>
+            item.name === product.category ||
+            (item.slug && item.slug === product.categorySlug)
+        );
+      if (!belongsToManagedCategory) return false;
+
       // Category Filter (Multi-select)
       const matchesCategory =
         selectedCategories.length > 0
-          ? selectedCategories.includes(product.category)
+          ? selectedCategories.some(
+              (cat) =>
+                cat === product.category ||
+                cat === product.categorySlug ||
+                managedCategories.some(
+                  (item) =>
+                    item.name === cat &&
+                    item.slug &&
+                    item.slug === product.categorySlug
+                )
+            )
           : true;
 
       // Price Filter
@@ -91,6 +151,7 @@ const Products = () => {
   }, [
     products,
     selectedCategories,
+    managedCategories,
     minPrice,
     maxPrice,
     inStockOnly,
@@ -113,8 +174,30 @@ const Products = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-6 h-6 border-2 border-gray-200 border-t-accent rounded-full animate-spin" />
+      <div className="min-h-screen bg-white pb-16 pt-16">
+        {/* Header Skeleton */}
+        <div className="bg-gray-50 border-b border-gray-200 mb-8 animate-pulse">
+          <div className="container-custom mx-auto px-4 md:px-6 py-8">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-3" />
+            <div className="h-4 bg-gray-200 rounded w-2/3" />
+          </div>
+        </div>
+
+        <div className="container-custom mx-auto px-4 md:px-6">
+          {/* Products Grid Skeleton */}
+          <ProductGridSkeleton count={12} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!categoriesLoaded) {
+    return (
+      <div className="min-h-screen bg-white pb-16 pt-16 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-gray-200 border-t-gray-400 rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm">Loading categories...</p>
+        </div>
       </div>
     );
   }
@@ -135,6 +218,37 @@ const Products = () => {
       </div>
 
       <div className="container-custom mx-auto px-4 md:px-6">
+        {categories.length > 0 && (
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setSelectedCategories([])}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                selectedCategories.length === 0
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              All Categories
+            </button>
+            {categories.map((cat) => {
+              const active = selectedCategories.includes(cat);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategories([cat])}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    active
+                      ? 'bg-accent text-white border-accent'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* SIDEBAR (Desktop) */}
           <aside className="hidden lg:block w-64 shrink-0">
@@ -258,7 +372,7 @@ const Products = () => {
 
       {/* MOBILE SIDEBAR DRAWER */}
       {showMobileSidebar && (
-        <div className="fixed inset-0 z-[1001] flex lg:hidden">
+        <div className="fixed inset-0 z-1001 flex lg:hidden">
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setShowMobileSidebar(false)}

@@ -29,6 +29,8 @@ import { OrderProvider } from './admin/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
 import OrderManagement from './admin/OrderManagement';
 import ProductDetails from './pages/Product/ProductDetails';
+import CategoryManagement from './admin/CategoryManagement';
+import InventoryManagement from './admin/InventoryManagement';
 
 // Scroll To Top on Route Change
 const ScrollToTopOnNavigate = () => {
@@ -106,11 +108,33 @@ const AppContent = () => {
           />
 
           <Route
+            path="/admin/inventory"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <InventoryManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/admin/orders"
             element={
               <ProtectedRoute>
                 <Layout>
                   <OrderManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/category-management"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CategoryManagement />
                 </Layout>
               </ProtectedRoute>
             }

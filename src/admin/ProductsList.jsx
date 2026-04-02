@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Pencil, Search, Plus, Filter, Package } from 'lucide-react';
-import { doc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useProducts } from './ProductContext';
 import toast from 'react-hot-toast';
 
 const ProductsList = () => {
   const navigate = useNavigate();
-  const { products, loading } = useProducts();
+  const { products, loading, deleteProduct } = useProducts();
 
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -37,11 +37,15 @@ const ProductsList = () => {
             onClick={async () => {
               toast.dismiss(t.id);
               try {
-                await deleteDoc(doc(db, 'products', id));
-                toast.success('Product deleted');
+                const result = await deleteProduct(id);
+                if (result?.success) {
+                  toast.success('Product deleted');
+                } else {
+                  toast.error(result?.message || 'Failed to delete product');
+                }
               } catch (error) {
                 console.error('Delete error:', error);
-                toast.error('Failed to delete product');
+                toast.error(error?.message || 'Failed to delete product');
               }
             }}
             className="px-3 py-1 bg-red-500 text-white rounded text-xs font-medium"

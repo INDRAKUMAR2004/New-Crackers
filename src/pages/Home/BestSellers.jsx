@@ -78,7 +78,11 @@ export default function BestSellers() {
           {bestSellers.map((product) => (
             <SwiperSlide key={product.id} className="h-auto">
               <div
-                onClick={() => navigate(`/products/${product.id}`)}
+                onClick={() =>
+                  navigate(
+                    `/products/${encodeURIComponent(product.slug || product.id)}`
+                  )
+                }
                 className="group bg-white rounded-xl cursor-pointer border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 h-full flex flex-col overflow-hidden"
               >
                 <div className="relative h-48 overflow-hidden bg-gray-50">

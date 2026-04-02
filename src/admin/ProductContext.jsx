@@ -1,83 +1,166 @@
 // src/admin/ProductContext.jsx
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-    db, 
-    collection, 
-    addDoc, 
-    getDocs 
-} from '../firebaseConfig'; // ⚠️ Path-ஐ உறுதிப்படுத்தவும்
+import { db, collection, addDoc, getDocs } from '../firebaseConfig';
+import { deleteDoc, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const productsCollectionRef = collection(db, "products"); // "products" collection-ஐ குறிக்கிறது
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const productsCollectionRef = collection(db, 'products');
 
-    // 1. Fetch Products (Read operation - ProductsList-க்கு தேவை)
-    const fetchProducts = async () => {
-        setLoading(true);
-        try {
-            const data = await getDocs(productsCollectionRef);
-            const productList = data.docs.map((doc) => ({ 
-                ...doc.data(), 
-                id: doc.id // Firestore document ID
-            }));
-            setProducts(productList);
-        } catch (error) {
-            console.error("Error fetching products:", error);
-            // Error handling here
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        // App load ஆனதும் product data-வை fetch செய்யும்
-        fetchProducts();
-    }, []);
-
-    // 2. Add Product (Create operation - AddProduct-லிருந்து அழைக்கப்படுகிறது)
-    const addProduct = async (productData) => {
-        try {
-            // Price மற்றும் MRP-ஐ Number-ஆக மாற்றுதல் (optional but recommended)
-            const dataToSave = {
-                ...productData,
-                price: Number(productData.price),
-                mrp: Number(productData.mrp),
-                sortOrder: Number(productData.sortOrder),
-                createdAt: new Date(), // Timestamp
-            };
-            
-            // 🚀 Add data to Firestore collection "products"
-            const docRef = await addDoc(productsCollectionRef, dataToSave);
-            
-            // Local state-ஐ update செய்யும், இதனால் ProductsList உடனே update ஆகும்
-            setProducts((prevProducts) => [
-                ...prevProducts, 
-                { ...dataToSave, id: docRef.id }
-            ]);
-
-            return { success: true, message: "Product successfully saved to Firebase!" };
-
-        } catch (error) {
-            console.error("Error adding product to Firestore:", error);
-            return { success: false, message: `Error adding product: ${error.message}` };
-        }
-    };
-
-    return (
-        <ProductContext.Provider value={{ products, addProduct, loading, fetchProducts }}>
-            {children}
-        </ProductContext.Provider>
+  // 1. Real-time listener for products - ensures instant updates across entire app
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      productsCollectionRef,
+      (snapshot) => {
+        const productList = snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }));
+        setProducts(productList);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching products:', error);
+        setLoading(false);
+      }
     );
+
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Add Product (Create operation - AddProduct-லிருந்து அழைக்கப்படுகிறது)
+  const addProduct = async (productData) => {
+    try {
+      // Price மற்றும் MRP-ஐ Number-ஆக மாற்றுதல் (optional but recommended)
+      const dataToSave = {
+        ...productData,
+        price: Number(productData.price),
+        mrp: Number(productData.mrp),
+        sortOrder: Number(productData.sortOrder),
+        createdAt: new Date(), // Timestamp
+      };
+
+      // 🚀 Add data to Firestore collection "products"
+      const docRef = await addDoc(productsCollectionRef, dataToSave);
+
+      // Local state-ஐ update செய்யும், இதனால் ProductsList உடனே update ஆகும்
+      setProducts((prevProducts) => [
+        ...prevProducts,
+        { ...dataToSave, id: docRef.id },
+      ]);
+
+      return {
+        success: true,
+        message: 'Product successfully saved to Firebase!',
+      };
+    } catch (error) {
+      console.error('Error adding product to Firestore:', error);
+      return {
+        success: false,
+        message: `Error adding product: ${error.message}`,
+      };
+    }
+  };
+
+  // 3. Update Product (used by AddProduct edit flow)
+  const updateProduct = async (productId, productData) => {
+    try {
+      const dataToSave = {
+        ...productData,
+        price: Number(productData.price),
+        mrp: Number(productData.mrp),
+        sortOrder: Number(productData.sortOrder),
+        updatedAt: new Date(),
+      };
+
+      await updateDoc(doc(db, 'products', productId), dataToSave);
+
+      setProducts((prevProducts) =>
+        prevProducts.map((item) =>
+          item.id === productId
+            ? { ...item, ...dataToSave, id: productId }
+            : item
+        )
+      );
+
+      return {
+        success: true,
+        message: 'Product updated successfully!',
+      };
+    } catch (error) {
+      console.error('Error updating product in Firestore:', error);
+      return {
+        success: false,
+        message: `Error updating product: ${error.message}`,
+      };
+    }
+  };
+
+  // Real-time listener handles automatic updates, so fetchProducts is optional
+  const fetchProducts = async () => {
+    console.log('Using real-time updates via onSnapshot');
+  };
+  const updateStock = async (productId, stockValue) => {
+    try {
+      // Validate stock value
+      if (!Number.isInteger(stockValue) || stockValue < 0) {
+        throw new Error('Stock must be a non-negative whole number');
+      }
+
+      await updateDoc(doc(db, 'products', productId), {
+        stock: stockValue,
+        outOfStock: stockValue <= 0,
+        updatedAt: new Date(),
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to update stock',
+      };
+    }
+  };
+
+  // 5. Delete Product
+  const deleteProduct = async (productId) => {
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting product from Firestore:', error);
+      return { success: false, message: error.message };
+    }
+  };
+
+  return (
+    <ProductContext.Provider
+      value={{
+        products,
+        addProduct,
+        updateProduct,
+        updateStock,
+        deleteProduct,
+        loading,
+        fetchProducts,
+      }}
+    >
+      {children}
+    </ProductContext.Provider>
+  );
 };
 
 export const useProducts = () => {
-    const context = useContext(ProductContext);
-    if (!context) {
-        throw new Error("useProducts must be used within a ProductProvider");
-    }
-    return context;
+  const context = useContext(ProductContext);
+  if (!context) {
+    throw new Error('useProducts must be used within a ProductProvider');
+  }
+  return context;
 };

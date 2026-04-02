@@ -1,17 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { db } from '../firebaseConfig';
-import {
-  collection,
-  getDocs,
-  orderBy,
-  query,
-  where,
-  Timestamp,
-  deleteDoc,
-  doc,
-  updateDoc,
-} from 'firebase/firestore';
+import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import toast from 'react-hot-toast';
 import {
   X,
   Search,
@@ -23,20 +14,17 @@ import {
   ShoppingBag,
   Clock,
   CheckCircle2,
-  Truck,
   Banknote,
   FileText,
   MapPin,
   Phone,
 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import toast from 'react-hot-toast';
 import InvoiceTemplate from './InvoiceTemplate';
+import { useOrders } from './OrderContext';
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { orders, loading, fetchOrders, updateOrderStatus, deleteOrder } =
+    useOrders();
   const [search, setSearch] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -44,91 +32,44 @@ const OrderManagement = () => {
   const [invoiceOrder, setInvoiceOrder] = useState(null);
   const [statusUpdating, setStatusUpdating] = useState(null);
 
-  const loadOrders = async () => {
-    setLoading(true);
-    try {
-      let constraints = [];
-      if (startDate) {
-        const s = new Date(startDate);
-        s.setHours(0, 0, 0, 0);
-        constraints.push(where('orderDate', '>=', Timestamp.fromDate(s)));
-      }
-      if (endDate) {
-        const e = new Date(endDate);
-        e.setHours(23, 59, 59, 999);
-        constraints.push(where('orderDate', '<=', Timestamp.fromDate(e)));
-      }
-      constraints.push(orderBy('orderDate', 'desc'));
-      const q = query(collection(db, 'orders'), ...constraints);
-      const snap = await getDocs(q);
-      setOrders(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    } catch (err) {
-      console.log(err);
-    }
-    setLoading(false);
-  };
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const orderDate = order.orderDate?.toDate
+        ? order.orderDate.toDate()
+        : null;
+      const matchesSearch = search
+        ? [
+            order.id,
+            order.customer?.name,
+            order.customer?.phone,
+            order.customer?.city,
+          ]
+            .filter(Boolean)
+            .some((value) =>
+              String(value).toLowerCase().includes(search.toLowerCase())
+            )
+        : true;
 
-  useEffect(() => {
-    loadOrders();
-  }, [startDate, endDate]);
+      const matchesStartDate =
+        startDate && orderDate
+          ? orderDate >= new Date(`${startDate}T00:00:00`)
+          : true;
+      const matchesEndDate =
+        endDate && orderDate
+          ? orderDate <= new Date(`${endDate}T23:59:59`)
+          : true;
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    setStatusUpdating(orderId);
-    try {
-      const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, { paymentStatus: newStatus });
-      setOrders(
-        orders.map((o) =>
-          o.id === orderId ? { ...o, paymentStatus: newStatus } : o
-        )
-      );
-    } catch (err) {
-      console.error('Error updating status:', err);
-      toast.error('Failed to update status.');
-    }
-    setStatusUpdating(null);
-  };
+      return matchesSearch && matchesStartDate && matchesEndDate;
+    });
+  }, [orders, search, startDate, endDate]);
 
-  const rankMap = {};
-  orders.forEach((o, i) => (rankMap[o.id] = i + 1));
-
-  const filtered = orders.filter((o) => {
-    const q = search.toLowerCase();
-    return (
-      o.id.toLowerCase().includes(q) ||
-      o.customer?.name?.toLowerCase().includes(q) ||
-      o.customer?.phone?.includes(q) ||
-      o.customer?.city?.toLowerCase().includes(q)
-    );
-  });
-
-  const handleDelete = async (id) => {
-    toast(
-      (t) => (
-        <div className="flex items-center gap-3">
-          <span className="text-sm">Delete this order?</span>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              await deleteDoc(doc(db, 'orders', id));
-              toast.success('Order deleted');
-              loadOrders();
-            }}
-            className="px-3 py-1 bg-red-500 text-white rounded text-xs font-medium"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1 bg-gray-200 rounded text-xs font-medium"
-          >
-            Cancel
-          </button>
-        </div>
-      ),
-      { duration: 10000 }
-    );
-  };
+  const rankMap = useMemo(() => {
+    const map = {};
+    orders.forEach((order, index) => {
+      map[order.id] = index + 1;
+    });
+    return map;
+  }, [orders]);
 
   const getStatusConfig = (status) => {
     switch (status) {
@@ -170,9 +111,58 @@ const OrderManagement = () => {
           text: 'text-slate-500',
           border: 'border-slate-500/20',
           icon: Clock,
-          label: status,
+          label: status || 'Pending',
         };
     }
+  };
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    setStatusUpdating(orderId);
+    try {
+      const result = await updateOrderStatus(orderId, newStatus);
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to update status.');
+      }
+      toast.success('Order status updated');
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast.error(err?.message || 'Failed to update status.');
+    } finally {
+      setStatusUpdating(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span className="text-sm">Delete this order?</span>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const result = await deleteOrder(id);
+              if (result?.success) {
+                toast.success('Order deleted');
+                setSelectedOrder(null);
+                setInvoiceOrder(null);
+              } else {
+                toast.error(result?.error || 'Failed to delete order');
+              }
+            }}
+            className="px-3 py-1 bg-red-500 text-white rounded text-xs font-medium"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 bg-gray-200 rounded text-xs font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      ),
+      { duration: 10000 }
+    );
   };
 
   const handleDownloadPDF = (order) => {
@@ -232,7 +222,6 @@ const OrderManagement = () => {
 
   return (
     <div className="space-y-5 font-sans">
-      {/* Header — Zoho Books style */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div>
@@ -245,7 +234,7 @@ const OrderManagement = () => {
           </div>
         </div>
         <button
-          onClick={loadOrders}
+          onClick={fetchOrders}
           className="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-[#d6dce8] rounded-md text-[13px] font-medium text-[#3d4f6f] hover:bg-[#f0f5fa] transition-colors shadow-sm"
         >
           <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} />
@@ -253,7 +242,6 @@ const OrderManagement = () => {
         </button>
       </div>
 
-      {/* Filters — Zoho Books style */}
       <div className="bg-white rounded-lg border border-[#e4e7ec] p-3 flex flex-col lg:flex-row gap-3 shadow-sm">
         <div className="relative flex-1">
           <Search
@@ -267,7 +255,7 @@ const OrderManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-col sm:flex-row">
           <div className="flex items-center bg-[#f7f9fc] border border-[#e4e7ec] rounded-md px-3 gap-2">
             <Calendar size={14} className="text-[#7c8db5] shrink-0" />
             <input
@@ -299,7 +287,6 @@ const OrderManagement = () => {
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
@@ -309,8 +296,7 @@ const OrderManagement = () => {
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && filtered.length === 0 && (
+      {!loading && filteredOrders.length === 0 && (
         <div className="bg-white rounded-lg border border-[#e4e7ec] flex flex-col items-center justify-center py-20 text-center shadow-sm">
           <div className="w-14 h-14 bg-[#f0f5fa] rounded-full flex items-center justify-center mb-4">
             <ShoppingBag size={26} className="text-[#0065b3]" />
@@ -324,8 +310,7 @@ const OrderManagement = () => {
         </div>
       )}
 
-      {/* Orders Table — Zoho Books style */}
-      {!loading && filtered.length > 0 && (
+      {!loading && filteredOrders.length > 0 && (
         <div className="bg-white rounded-lg border border-[#e4e7ec] overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -352,25 +337,26 @@ const OrderManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eef1f6]">
-                {filtered.map((o) => {
-                  const status = getStatusConfig(o.paymentStatus);
+                {filteredOrders.map((order) => {
+                  const status = getStatusConfig(order.paymentStatus);
                   return (
                     <tr
-                      key={o.id}
+                      key={order.id}
                       className="hover:bg-[#f7f9fc] transition-colors cursor-pointer"
-                      onClick={() => setSelectedOrder(o)}
+                      onClick={() => setSelectedOrder(order)}
                     >
                       <td className="px-5 py-3.5">
                         <span className="text-[12px] font-mono font-semibold text-[#0065b3]">
-                          #{rankMap[o.id]}
+                          #{rankMap[order.id]}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
                         <p className="text-[13px] font-semibold text-[#1a1a2e]">
-                          {o.customer?.name}
+                          {order.customer?.name}
                         </p>
                         <p className="text-[11px] text-[#7c8db5] flex items-center gap-1 mt-0.5">
-                          <MapPin size={10} /> {o.customer?.city || 'Unknown'}
+                          <MapPin size={10} />{' '}
+                          {order.customer?.city || 'Unknown'}
                         </p>
                       </td>
                       <td
@@ -378,20 +364,20 @@ const OrderManagement = () => {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <select
-                          value={o.paymentStatus || 'Pending'}
+                          value={order.paymentStatus || 'Pending'}
                           onChange={(e) =>
-                            handleStatusChange(o.id, e.target.value)
+                            handleStatusChange(order.id, e.target.value)
                           }
-                          disabled={statusUpdating === o.id}
+                          disabled={statusUpdating === order.id}
                           className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border outline-none cursor-pointer appearance-none text-center ${
-                            o.paymentStatus === 'Paid'
+                            order.paymentStatus === 'Paid'
                               ? 'bg-[#e6f9f0] text-[#0d7a40] border-[#b8e8d0]'
-                              : o.paymentStatus === 'Online Payment'
+                              : order.paymentStatus === 'Online Payment'
                                 ? 'bg-[#e6f0ff] text-[#0052cc] border-[#b3d4ff]'
-                                : o.paymentStatus === 'Cash Payment'
+                                : order.paymentStatus === 'Cash Payment'
                                   ? 'bg-[#f0ecff] text-[#5243aa] border-[#c0b6f2]'
                                   : 'bg-[#fff8e1] text-[#b45309] border-[#fde68a]'
-                          } ${statusUpdating === o.id ? 'opacity-50' : ''}`}
+                          } ${statusUpdating === order.id ? 'opacity-50' : ''}`}
                         >
                           <option value="Pending">Pending</option>
                           <option value="Paid">Paid</option>
@@ -401,12 +387,12 @@ const OrderManagement = () => {
                       </td>
                       <td className="px-4 py-3.5 text-center">
                         <span className="text-[12px] text-[#3d4f6f] font-medium bg-[#f0f5fa] px-2 py-0.5 rounded">
-                          {o.products?.length || 0}
+                          {order.products?.length || 0}
                         </span>
                       </td>
                       <td className="px-4 py-3.5 text-right">
                         <span className="text-[13px] font-bold text-[#1a1a2e]">
-                          ₹{o.total?.toLocaleString()}
+                          ₹{order.total?.toLocaleString()}
                         </span>
                       </td>
                       <td
@@ -415,21 +401,21 @@ const OrderManagement = () => {
                       >
                         <div className="flex items-center justify-end gap-0.5">
                           <button
-                            onClick={() => setSelectedOrder(o)}
+                            onClick={() => setSelectedOrder(order)}
                             className="p-1.5 rounded-md hover:bg-[#e6f0ff] text-[#7c8db5] hover:text-[#0065b3] transition-colors"
                             title="View"
                           >
                             <Eye size={15} />
                           </button>
                           <button
-                            onClick={() => setInvoiceOrder(o)}
+                            onClick={() => setInvoiceOrder(order)}
                             className="p-1.5 rounded-md hover:bg-[#f0ecff] text-[#7c8db5] hover:text-[#5243aa] transition-colors"
                             title="Invoice"
                           >
                             <FileText size={15} />
                           </button>
                           <button
-                            onClick={() => handleDelete(o.id)}
+                            onClick={() => handleDelete(order.id)}
                             className="p-1.5 rounded-md hover:bg-[#fef2f2] text-[#7c8db5] hover:text-[#dc2626] transition-colors"
                             title="Delete"
                           >
@@ -446,7 +432,6 @@ const OrderManagement = () => {
         </div>
       )}
 
-      {/* Detail Modal — Zoho Books Style */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -454,7 +439,6 @@ const OrderManagement = () => {
             onClick={() => setSelectedOrder(null)}
           />
           <div className="bg-white w-full max-w-3xl rounded-lg shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Modal Header — Blue accent bar */}
             <div className="bg-[#0065b3] px-6 py-4 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
@@ -497,12 +481,9 @@ const OrderManagement = () => {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="overflow-y-auto flex-1">
-              {/* Customer Info Bar */}
               <div className="bg-[#f7f9fc] px-6 py-4 border-b border-[#e4e7ec]">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {/* Customer */}
                   <div>
                     <p className="text-[10px] font-bold text-[#0065b3] uppercase tracking-widest mb-1.5">
                       Customer
@@ -515,7 +496,6 @@ const OrderManagement = () => {
                       {selectedOrder.customer?.phone}
                     </p>
                   </div>
-                  {/* Shipping */}
                   <div>
                     <p className="text-[10px] font-bold text-[#0065b3] uppercase tracking-widest mb-1.5">
                       Shipping Address
@@ -530,7 +510,6 @@ const OrderManagement = () => {
                         : ''}
                     </p>
                   </div>
-                  {/* Payment */}
                   <div>
                     <p className="text-[10px] font-bold text-[#0065b3] uppercase tracking-widest mb-1.5">
                       Payment
@@ -562,7 +541,6 @@ const OrderManagement = () => {
                 </div>
               </div>
 
-              {/* Items Table — Zoho Books style */}
               <div className="px-6 py-5">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-[12px] font-bold text-[#0065b3] uppercase tracking-widest flex items-center gap-1.5">
@@ -621,7 +599,6 @@ const OrderManagement = () => {
                     </tbody>
                   </table>
 
-                  {/* Totals Row */}
                   <div className="bg-[#fafbfd] px-4 py-3 border-t border-[#e4e7ec]">
                     <div className="flex justify-end">
                       <div className="w-[260px] space-y-1.5">
@@ -650,7 +627,6 @@ const OrderManagement = () => {
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="px-6 py-3 bg-[#f7f9fc] border-t border-[#e4e7ec] flex gap-2 shrink-0">
               <button
                 onClick={() => {

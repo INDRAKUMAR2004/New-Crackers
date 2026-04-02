@@ -7,6 +7,7 @@ import {
   query,
   where,
   getDocs,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useCart } from '../../context/CartContext';
@@ -34,9 +35,24 @@ const ProductDetails = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const snap = await getDoc(doc(db, 'products', id));
-      if (snap.exists()) {
-        const data = { id: snap.id, ...snap.data() };
+      const directSnap = await getDoc(doc(db, 'products', id));
+      if (directSnap.exists()) {
+        const data = { id: directSnap.id, ...directSnap.data() };
+        setProduct(data);
+        setActiveImg(data.image);
+        fetchRelated(data.category, data.id);
+        return;
+      }
+
+      const bySlugQuery = query(
+        collection(db, 'products'),
+        where('slug', '==', id),
+        limit(1)
+      );
+      const bySlugSnap = await getDocs(bySlugQuery);
+      if (!bySlugSnap.empty) {
+        const first = bySlugSnap.docs[0];
+        const data = { id: first.id, ...first.data() };
         setProduct(data);
         setActiveImg(data.image);
         fetchRelated(data.category, data.id);
@@ -123,7 +139,7 @@ const ProductDetails = () => {
                 <button
                   key={i}
                   onClick={() => setActiveImg(img)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-lg border overflow-hidden transition-colors ${
+                  className={`shrink-0 w-16 h-16 rounded-lg border overflow-hidden transition-colors ${
                     activeImg === img
                       ? 'border-accent'
                       : 'border-gray-200 opacity-60 hover:opacity-100'
@@ -317,7 +333,9 @@ const ProductDetails = () => {
                 <div
                   key={p.id}
                   className="group bg-white border border-gray-100 rounded-xl p-3 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer"
-                  onClick={() => navigate(`/products/${p.id}`)}
+                  onClick={() =>
+                    navigate(`/products/${encodeURIComponent(p.slug || p.id)}`)
+                  }
                 >
                   <div className="aspect-square bg-gray-50 rounded-lg mb-2 overflow-hidden">
                     <img

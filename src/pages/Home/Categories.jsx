@@ -44,13 +44,16 @@ export default function Categories() {
     };
   }, []);
 
-  const getProductCount = (categoryName) => {
-    const count = products.filter((p) => p.category === categoryName).length;
+  const getProductCount = (categoryName, categorySlug) => {
+    const count = products.filter(
+      (p) => p.categorySlug === categorySlug || p.category === categoryName
+    ).length;
     return `${count} items`;
   };
 
-  const handleCategoryClick = (categoryName) => {
-    navigate(`/products?category=${encodeURIComponent(categoryName)}`);
+  const handleCategoryClick = (categoryName, categorySlug) => {
+    const categoryKey = categorySlug || categoryName;
+    navigate(`/products?category=${encodeURIComponent(categoryKey)}`);
   };
 
   return (
@@ -83,8 +86,8 @@ export default function Categories() {
               <SwiperSlide key={cat.id}>
                 <CategoryCard
                   cat={cat}
-                  countText={getProductCount(cat.name)}
-                  onClick={() => handleCategoryClick(cat.name)}
+                  countText={getProductCount(cat.name, cat.slug)}
+                  onClick={() => handleCategoryClick(cat.name, cat.slug)}
                 />
               </SwiperSlide>
             ))}
@@ -95,8 +98,8 @@ export default function Categories() {
               <CategoryCard
                 key={cat.id}
                 cat={cat}
-                countText={getProductCount(cat.name)}
-                onClick={() => handleCategoryClick(cat.name)}
+                countText={getProductCount(cat.name, cat.slug)}
+                onClick={() => handleCategoryClick(cat.name, cat.slug)}
               />
             ))}
           </div>

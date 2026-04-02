@@ -26,7 +26,7 @@ export default function Dashboard() {
   const uniqueCustomers = new Set(
     orders.map((o) => o.customer?.phone).filter(Boolean)
   ).size;
-  const lowStockItems = products.filter((p) => (Number(p.stock) || 0) < 5);
+  const lowStockItems = products.filter((p) => (Number(p.stock) || 0) < 20);
   const lowStockCount = lowStockItems.length;
   const recentOrders = orders.slice(0, 5);
 

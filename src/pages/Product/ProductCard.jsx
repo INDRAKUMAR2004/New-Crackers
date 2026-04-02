@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const ProductCard = ({ product }) => {
   const [qty, setQty] = useState(1);
   const navigate = useNavigate();
+  const productPath = `/products/${encodeURIComponent(product.slug || product.id)}`;
 
   const isAvailable = !product.outOfStock;
   const originalPrice = product.mrp || null;
@@ -60,7 +61,7 @@ const ProductCard = ({ product }) => {
 
       <div
         className="relative h-44 md:h-48 overflow-hidden bg-gray-50 cursor-pointer"
-        onClick={() => navigate(`/products/${product.id}`)}
+        onClick={() => navigate(productPath)}
       >
         <img
           src={product.image}
@@ -90,7 +91,7 @@ const ProductCard = ({ product }) => {
         <h3
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/products/${product.id}`);
+            navigate(productPath);
           }}
           className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-accent transition-colors"
         >

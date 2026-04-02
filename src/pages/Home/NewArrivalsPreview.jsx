@@ -49,7 +49,11 @@ export default function NewArrivalsPreview() {
           {products.map((item) => (
             <div
               key={item.id}
-              onClick={() => navigate(`/products/${item.id}`)}
+              onClick={() =>
+                navigate(
+                  `/products/${encodeURIComponent(item.slug || item.id)}`
+                )
+              }
               className="group bg-white rounded-xl cursor-pointer border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden"
             >
               <div className="relative h-44 md:h-48 overflow-hidden bg-gray-50">
