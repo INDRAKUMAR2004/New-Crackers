@@ -64,7 +64,7 @@ const AppContent = () => {
 
           {/* ADMIN */}
           <Route
-            path="/admin-dashboard"
+            path="/admin-dashboard" 
             element={
               <ProtectedRoute>
                 <Layout>

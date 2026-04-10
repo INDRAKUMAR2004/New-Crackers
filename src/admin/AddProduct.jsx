@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProducts } from '../admin/ProductContext';
 import {
@@ -150,42 +150,45 @@ const AddProduct = () => {
     }
   }, [editingProduct]);
 
-  const buildProductCode = (categoryName, productName) => {
-    const toToken = (value, fallback) => {
-      const clean = (value || '')
-        .toUpperCase()
-        .replace(/[^A-Z0-9\s]/g, '')
-        .trim();
-      if (!clean) return fallback;
-      const words = clean.split(/\s+/).filter(Boolean);
-      const byInitials = words
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 3);
-      if (byInitials.length >= 2) return byInitials.padEnd(3, 'X');
-      const compact = clean.replace(/\s+/g, '');
-      return compact.slice(0, 3).padEnd(3, 'X');
-    };
+  const buildProductCode = useCallback(
+    (categoryName, productName) => {
+      const toToken = (value, fallback) => {
+        const clean = (value || '')
+          .toUpperCase()
+          .replace(/[^A-Z0-9\s]/g, '')
+          .trim();
+        if (!clean) return fallback;
+        const words = clean.split(/\s+/).filter(Boolean);
+        const byInitials = words
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 3);
+        if (byInitials.length >= 2) return byInitials.padEnd(3, 'X');
+        const compact = clean.replace(/\s+/g, '');
+        return compact.slice(0, 3).padEnd(3, 'X');
+      };
 
-    const catToken = toToken(categoryName, 'CAT');
-    const nameToken = toToken(productName, 'PRD');
+      const catToken = toToken(categoryName, 'CAT');
+      const nameToken = toToken(productName, 'PRD');
 
-    // Continue running series inside the same category.
-    const categorySeries = products
-      .map((p) => (p.productCode || '').toUpperCase())
-      .map((code) =>
-        code.match(new RegExp(`^${catToken}-[A-Z0-9]{3}-(\\d{4})$`))
-      )
-      .filter(Boolean)
-      .map((match) => Number(match[1]))
-      .filter((num) => Number.isFinite(num));
+      // Continue running series inside the same category.
+      const categorySeries = products
+        .map((p) => (p.productCode || '').toUpperCase())
+        .map((code) =>
+          code.match(new RegExp(`^${catToken}-[A-Z0-9]{3}-(\\d{4})$`))
+        )
+        .filter(Boolean)
+        .map((match) => Number(match[1]))
+        .filter((num) => Number.isFinite(num));
 
-    const nextSeries =
-      (categorySeries.length ? Math.max(...categorySeries) : 0) + 1;
-    const serial = String(nextSeries).padStart(4, '0');
+      const nextSeries =
+        (categorySeries.length ? Math.max(...categorySeries) : 0) + 1;
+      const serial = String(nextSeries).padStart(4, '0');
 
-    return `${catToken}-${nameToken}-${serial}`;
-  };
+      return `${catToken}-${nameToken}-${serial}`;
+    },
+    [products]
+  );
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'categories'), (snap) => {
@@ -219,6 +222,30 @@ const AddProduct = () => {
       }));
     }
   }, [product.name, editingProduct]);
+
+  // Auto-generate SKU
+  useEffect(() => {
+    if (
+      !editingProduct &&
+      !isSkuManuallyEdited &&
+      product.category &&
+      product.name &&
+      products.length >= 0
+    ) {
+      const generatedCode = buildProductCode(product.category, product.name);
+      setProduct((prev) => ({
+        ...prev,
+        productCode: generatedCode,
+      }));
+    }
+  }, [
+    product.category,
+    product.name,
+    products,
+    editingProduct,
+    isSkuManuallyEdited,
+    buildProductCode,
+  ]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Pencil, Search, Plus, Filter, Package } from 'lucide-react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import {
+  Trash2,
+  Pencil,
+  Search,
+  Plus,
+  Filter,
+  Package,
+  ShoppingBag,
+  Sparkles,
+  Tag,
+  Zap,
+  ArrowUpRight
+} from 'lucide-react';
+import { doc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useProducts } from './ProductContext';
 import toast from 'react-hot-toast';
