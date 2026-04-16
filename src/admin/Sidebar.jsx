@@ -74,7 +74,7 @@ export default function Sidebar({ isOpen, setIsOpen, isMobile }) {
     try {
       await logout();
       toast.success('Logged out');
-      navigate('/admin-login');
+      navigate('/admin');
     } catch {
       toast.error('Logout failed');
     }

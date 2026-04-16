@@ -1,39 +1,69 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { db } from '../firebaseConfig';
-import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const CartContext = createContext();
 
-const CART_ID = 'guest-cart'; // later → userId
+// 🔥 Generate or retrieve a unique cart ID for the user
+const getCartId = () => {
+  let id = localStorage.getItem('cartId');
+  if (!id) {
+    id = 'cart-' + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('cartId', id);
+  }
+  return id;
+};
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    // Stage 1: Load from localStorage for immediate UI
+    try {
+      const saved = localStorage.getItem('localCart');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  
   const [openCart, setOpenCart] = useState(false);
+  const cartId = useMemo(() => getCartId(), []);
 
-  // 🔥 REALTIME CART LISTENER
+  // Sync state to localStorage whenever it changes
   useEffect(() => {
-    const cartRef = doc(db, 'carts', CART_ID);
+    localStorage.setItem('localCart', JSON.stringify(cart));
+  }, [cart]);
+
+  // 🔥 REALTIME CART LISTENER (From Firebase)
+  useEffect(() => {
+    const cartRef = doc(db, 'carts', cartId);
 
     const unsub = onSnapshot(cartRef, (snap) => {
       if (snap.exists()) {
-        setCart(snap.data().items || []);
+        const remoteItems = snap.data().items || [];
+        // Only update if remote is different to avoid unnecessary re-renders
+        // or overwriting fresh local updates (though Firebase is source of truth)
+        setCart(remoteItems);
       }
     });
 
     return () => unsub();
-  }, []);
+  }, [cartId]);
 
-  // 🔥 SAVE CART TO FIREBASE
-  const saveCart = async (items) => {
-    const cartRef = doc(db, 'carts', CART_ID);
-    await setDoc(
-      cartRef,
-      {
-        items,
-        updatedAt: new Date(),
-      },
-      { merge: true }
-    );
+  // 🔥 SYNC TO FIREBASE ONLY
+  const syncToFirebase = async (items) => {
+    try {
+      const cartRef = doc(db, 'carts', cartId);
+      await setDoc(
+        cartRef,
+        {
+          items,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error("Error syncing cart to Firebase:", error);
+    }
   };
 
   // ✅ ADD TO CART
@@ -45,38 +75,47 @@ export const CartProvider = ({ children }) => {
       return { success: false, message: 'Product is out of stock' };
     }
 
-    let updatedCart;
-
-    const exists = cart.find((p) => p.id === product.id);
-
-    if (exists) {
-      updatedCart = cart.map((p) =>
-        p.id === product.id ? { ...p, qty: p.qty + product.qty } : p
-      );
-    } else {
-      updatedCart = [...cart, product];
-    }
-
-    await saveCart(updatedCart);
+    setCart(prevCart => {
+      const exists = prevCart.find((p) => p.id === product.id);
+      let updatedCart;
+      
+      if (exists) {
+        updatedCart = prevCart.map((p) =>
+          p.id === product.id ? { ...p, qty: p.qty + (product.qty || 1) } : p
+        );
+      } else {
+        updatedCart = [...prevCart, { ...product, qty: product.qty || 1 }];
+      }
+      
+      syncToFirebase(updatedCart);
+      return updatedCart;
+    });
   };
 
   // ✅ UPDATE QTY
   const updateItemQty = async (id, qty) => {
-    const updatedCart = cart.map((item) =>
-      item.id === id ? { ...item, qty } : item
-    );
-    await saveCart(updatedCart);
+    setCart(prevCart => {
+      const updatedCart = prevCart.map((item) =>
+        item.id === id ? { ...item, qty: Math.max(1, qty) } : item
+      );
+      syncToFirebase(updatedCart);
+      return updatedCart;
+    });
   };
 
   // ✅ REMOVE ITEM
   const removeItem = async (id) => {
-    const updatedCart = cart.filter((item) => item.id !== id);
-    await saveCart(updatedCart);
+    setCart(prevCart => {
+      const updatedCart = prevCart.filter((item) => item.id !== id);
+      syncToFirebase(updatedCart);
+      return updatedCart;
+    });
   };
 
   // ✅ CLEAR CART
   const clearCart = async () => {
-    await saveCart([]);
+    setCart([]);
+    syncToFirebase([]);
   };
 
   return (
